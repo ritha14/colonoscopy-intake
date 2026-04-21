@@ -704,111 +704,42 @@ def step_8():
 
 # ── Step 9: Decision Pathways ─────────────────────────────────────────────────
 def step_9():
-    st.markdown("### Step 9: Your Options")
+    st.markdown("### Step 9: How Would You Like to Proceed?")
 
     d = st.session_state.data
     result_code = d.get("insurance_result", "")
-    ins_message = d.get("insurance_message", "")
-    pay_label = d.get("pay_label", "")
 
-    _box("info", f"<strong>Insurance Status:</strong> {pay_label}<br>{ins_message}")
-    st.markdown("---")
-
-    if result_code == "ELIGIBLE":
+    # Self-pay only — ask if they want to proceed with $600 cash
+    if result_code == "CASH_PAY_FULL":
+        _box("info", d.get("insurance_message", ""))
         st.markdown("#### How would you like to proceed?")
         decision = st.radio("Choose one:", [
-            "Proceed — continue scheduling through this form",
-            f"I prefer to call the office to schedule ({OFFICE_PHONE})",
-        ], key="s9_dec_elig")
-
-        cn1, cn2 = st.columns([1, 5])
-        with cn1:
-            _nav_back(8, "s9_back_elig")
-        with cn2:
-            if st.button("Next →", type="primary", key="s9_next_elig"):
-                if "call the office" in decision:
-                    d["patient_decision"] = "Chose to call office for scheduling"
-                    d["status"] = "chose_office_visit"
-                    d["submission_date"] = datetime.now().strftime("%m/%d/%Y %I:%M %p")
-                    d["submission_id"] = str(uuid.uuid4())[:8].upper()
-                    try:
-                        pdf = generate_referral_pdf(d)
-                        st.session_state.pdf_bytes = pdf
-                        save_submission(d)
-                        send_emails(d, pdf, st.session_state.uploaded_files)
-                    except Exception:
-                        pass
-                    _go(13)
-                    _rerun()
-                else:
-                    d["patient_decision"] = "Direct scheduling through intake form"
-                    _go(10)
-                    _rerun()
-
-    elif result_code in ("CASH_PAY_SURGEON", "CASH_PAY_FULL"):
-        st.markdown("#### How would you like to proceed?")
-        surgeon_fee = "$600"
-        options = [
-            f"Proceed — I understand the {surgeon_fee} surgeon fee and want to schedule",
-            "I'd like to find an in-network surgeon instead",
+            "Proceed — I understand the fees and want to schedule",
             "I am not ready to proceed at this time",
-        ]
-        decision = st.radio("Choose one:", options, key="s9_dec_cash")
+        ], key="s9_dec_cash")
 
         cn1, cn2 = st.columns([1, 5])
         with cn1:
             _nav_back(8, "s9_back_cash")
         with cn2:
             if st.button("Next →", type="primary", key="s9_next_cash"):
-                if "find an in-network" in decision:
-                    d["patient_decision"] = "Chose to find in-network provider"
-                    d["status"] = "chose_in_network"
-                    d["submission_date"] = datetime.now().strftime("%m/%d/%Y %I:%M %p")
-                    d["submission_id"] = str(uuid.uuid4())[:8].upper()
-                    save_submission(d)
-                    _box("info", "We understand. Ask your insurance for a list of in-network colonoscopy providers near you. Thank you for considering Houston Community Surgical.")
-                elif "not ready" in decision:
-                    d["patient_decision"] = "Chose not to proceed at this time"
+                if "not ready" in decision:
+                    d["patient_decision"] = "Chose not to proceed"
                     d["status"] = "chose_not_to_proceed"
                     d["submission_date"] = datetime.now().strftime("%m/%d/%Y %I:%M %p")
                     d["submission_id"] = str(uuid.uuid4())[:8].upper()
                     save_submission(d)
                     _box("info", f"No problem. If you change your mind, call us at {OFFICE_PHONE} or complete this form again.")
                 else:
-                    d["patient_decision"] = f"Agreed to {surgeon_fee} surgeon cash fee — direct scheduling"
+                    d["patient_decision"] = "Proceeding with self-pay"
                     _go(10)
                     _rerun()
 
-    elif result_code == "OFFICE_CHECK":
-        st.markdown("#### How would you like to proceed?")
-        decision = st.radio("Choose one:", [
-            "Proceed — the office can verify my insurance when they call to schedule",
-            f"I'll call the office first to verify: {OFFICE_PHONE}",
-        ], key="s9_dec_check")
-
-        cn1, cn2 = st.columns([1, 5])
-        with cn1:
-            _nav_back(8, "s9_back_check")
-        with cn2:
-            if st.button("Next →", type="primary", key="s9_next_check"):
-                if "call the office first" in decision:
-                    d["patient_decision"] = "Chose to call office first for insurance verification"
-                    d["status"] = "chose_office_visit"
-                    d["submission_date"] = datetime.now().strftime("%m/%d/%Y %I:%M %p")
-                    d["submission_id"] = str(uuid.uuid4())[:8].upper()
-                    try:
-                        pdf = generate_referral_pdf(d)
-                        st.session_state.pdf_bytes = pdf
-                        save_submission(d)
-                        send_emails(d, pdf, st.session_state.uploaded_files)
-                    except Exception:
-                        pass
-                    _go(13)
-                    _rerun()
-                else:
-                    d["patient_decision"] = "Proceeding — insurance to be verified by office"
-                    _go(10)
-                    _rerun()
+    else:
+        # All other insurance types — office will verify, just proceed
+        d["patient_decision"] = "Proceeding — office will verify insurance before scheduling"
+        _go(10)
+        _rerun()
 
 
 # ── Step 10: Instruction Video ────────────────────────────────────────────────
