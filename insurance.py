@@ -1,96 +1,72 @@
 """
-Insurance eligibility classification based on Dr. Belizaire's network status.
+Insurance handling — simplified.
 
-In-network: Traditional Medicare, Tricare only.
-Cannot see: Medicaid.
-
-Key rule for commercial plans:
-  - PPO with out-of-network benefits → ELIGIBLE (office handles IDR/gap exception)
-  - HMO (no OON benefits) → CASH PAY $600 surgeon or refer in-network
-  - Fully-funded plan → CASH PAY $600 surgeon or refer in-network
-  - Medicare Advantage → CASH PAY $600 surgeon or refer in-network
+The office verifies insurance before scheduling for everyone.
+Only hard stop: Medicaid (not accepted).
+Warning only: Medicare Advantage (not in-network, office discusses options).
+Everyone else: office will confirm coverage before scheduling.
 """
 
 INSURANCE_TYPES: dict[str, dict] = {
-    "medicare": {
-        "label": "Medicare",
-        "result": "ELIGIBLE",
-        "message": "Your Medicare can be used for the full procedure.",
-        "status": "eligible",
-        "pay_label": "Medicare — Fully Covered",
-    },
-    "ppo": {
-        "label": "PPO",
-        "result": "ELIGIBLE",
+    "traditional_medicare": {
+        "label": "Medicare (Original / Traditional Medicare)",
+        "result": "OFFICE_VERIFY",
         "message": (
-            "Because you have a PPO plan, your insurance can be used for this procedure. "
-            "Our office will handle the out-of-network billing on your behalf."
+            "Dr. Belizaire works with Traditional Medicare. "
+            "The office will be in touch before scheduling to confirm your coverage."
         ),
-        "status": "eligible",
-        "pay_label": "PPO — Eligible",
+        "status": "pending_office_verification",
+        "pay_label": "Traditional Medicare",
     },
-    "hmo": {
-        "label": "HMO",
-        "result": "CASH_PAY_SURGEON",
+    "commercial": {
+        "label": "Commercial Insurance (PPO, HMO, or other employer/marketplace plan)",
+        "result": "OFFICE_VERIFY",
         "message": (
-            "HMO plans typically do not cover out-of-network providers. "
-            "You have two options: pay the surgeon fee of $600 cash "
-            "(facility and anesthesia still bill through your insurance), "
-            "or we can refer you to an in-network surgeon.\n\n"
-            "If you believe this is incorrect or you'd like us to double-check your coverage, "
-            "please call or text our office at (832) 979-5670 and say: "
-            "\"I am interested in direct-to-colonoscopy and I want to make sure my insurance will cover it.\""
+            "Dr. Belizaire works with most commercial insurance plans. "
+            "The office will be in touch before scheduling to confirm that your insurance will cover the procedure."
         ),
-        "status": "cash_pay_surgeon",
-        "pay_label": "HMO — Cash $600 or In-Network Referral",
+        "status": "pending_office_verification",
+        "pay_label": "Commercial Insurance",
     },
     "medicare_advantage": {
-        "label": "Medicare Advantage",
-        "result": "CASH_PAY_SURGEON",
+        "label": "Medicare Advantage (a Medicare plan through a private insurer — Humana, Aetna, AARP, WellCare, etc.)",
+        "result": "MA_WARNING",
         "message": (
-            "Medicare Advantage plans are not accepted by Dr. Belizaire. "
-            "You have two options: pay the surgeon fee of $600 cash "
-            "(facility and anesthesia still bill through your insurance), "
-            "or we can refer you to an in-network surgeon.\n\n"
-            "If you believe this is incorrect or you'd like us to double-check your coverage, "
-            "please call or text our office at (832) 979-5670 and say: "
-            "\"I am interested in direct-to-colonoscopy and I want to make sure my insurance will cover it.\""
+            "Please note: Dr. Belizaire is not in-network with Medicare Advantage plans. "
+            "The office will be in touch before scheduling to discuss your options."
         ),
-        "status": "cash_pay_surgeon",
-        "pay_label": "Medicare Advantage — Cash $600 or In-Network Referral",
+        "status": "pending_office_verification",
+        "pay_label": "Medicare Advantage — Office Will Follow Up",
     },
     "medicaid": {
-        "label": "Medicaid",
+        "label": "Medicaid (including STAR, CHIP, and Medicaid managed care plans)",
         "result": "NOT_ELIGIBLE",
         "message": (
-            "Dr. Belizaire is unable to see Medicaid patients. "
+            "Unfortunately, Dr. Belizaire is unable to see Medicaid patients. "
             "We are sorry we cannot assist you at this time. "
             "Please contact your primary care doctor for a referral to a Medicaid-participating provider."
         ),
         "status": "ineligible_insurance",
         "pay_label": "Not Eligible",
     },
-    "unknown": {
-        "label": "Unknown / Not sure",
-        "result": "OFFICE_CHECK",
+    "military": {
+        "label": "Military / Tricare / VA / CHAMPVA",
+        "result": "OFFICE_VERIFY",
         "message": (
-            "No problem — our team will verify your insurance when they reach out to schedule. "
-            "Please have your insurance card available when we call.\n\n"
-            "You can also reach us first by calling or texting (832) 979-5670 and saying: "
-            "\"I am interested in direct-to-colonoscopy and I want to make sure my insurance will cover it.\""
+            "The office will be in touch before scheduling to confirm your coverage."
         ),
         "status": "pending_office_verification",
-        "pay_label": "Pending Verification",
+        "pay_label": "Military / Tricare",
     },
     "self_pay": {
-        "label": "Cash (no insurance)",
+        "label": "Self-Pay (no insurance)",
         "result": "CASH_PAY_FULL",
         "message": (
             "The surgeon fee is $600 cash, due before your procedure. "
             "Facility and anesthesia fees will be quoted separately prior to scheduling."
         ),
         "status": "cash_pay_full",
-        "pay_label": "Full Cash Pay",
+        "pay_label": "Self-Pay",
     },
 }
 
@@ -101,12 +77,12 @@ def get_insurance_options() -> list[tuple[str, str]]:
 
 
 def analyze_insurance(insurance_type_key: str) -> dict:
-    """Return the eligibility result dict for the given insurance type key."""
+    """Return the result dict for the given insurance type key."""
     if insurance_type_key in INSURANCE_TYPES:
         return INSURANCE_TYPES[insurance_type_key]
     return {
-        "result": "OFFICE_CHECK",
-        "message": "We need to verify your insurance. Our team will contact you.",
+        "result": "OFFICE_VERIFY",
+        "message": "The office will be in touch to confirm your coverage before scheduling.",
         "status": "pending_office_verification",
         "pay_label": "Pending Verification",
     }

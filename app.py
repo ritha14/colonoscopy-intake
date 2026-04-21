@@ -455,21 +455,19 @@ def step_6():
 
     if has_insurance:
         st.markdown("#### Insurance Card")
-        st.caption("Upload the **front and back** of your insurance card as photos or scans (JPG or PNG). We will read the card to determine your coverage.")
+        st.caption("Upload the front and back of your insurance card.")
 
-        ins_front = st.file_uploader("Insurance Card — FRONT *", type=["jpg", "jpeg", "png"], key="uf_ins_front")
+        ins_front = st.file_uploader("Insurance Card — FRONT *", type=["jpg", "jpeg", "png", "pdf"], key="uf_ins_front")
         if ins_front:
             uf["ins_front_bytes"] = ins_front.getvalue()
             uf["ins_front_name"] = ins_front.name
-            st.session_state.card_analysis = None  # reset analysis if card is changed
         if "ins_front_bytes" in uf:
             st.success(f"✅ Front uploaded: {uf.get('ins_front_name', 'file')}")
 
-        ins_back = st.file_uploader("Insurance Card — BACK *", type=["jpg", "jpeg", "png"], key="uf_ins_back")
+        ins_back = st.file_uploader("Insurance Card — BACK *", type=["jpg", "jpeg", "png", "pdf"], key="uf_ins_back")
         if ins_back:
             uf["ins_back_bytes"] = ins_back.getvalue()
             uf["ins_back_name"] = ins_back.name
-            st.session_state.card_analysis = None  # reset analysis if card is changed
         if "ins_back_bytes" in uf:
             st.success(f"✅ Back uploaded: {uf.get('ins_back_name', 'file')}")
 
@@ -531,139 +529,88 @@ def step_6():
                 "policy_holder_dob": policy_holder_dob.strip(),
                 "id_docs_note": "Uploaded and emailed to office",
             })
-            st.session_state.ins_result = None   # reset eligibility
-            st.session_state.card_analysis = None  # reset card analysis
+            st.session_state.ins_result = None
             _go(7)
             _rerun()
 
 
-# ── Step 7: Insurance Card Analysis & Eligibility ─────────────────────────────
+# ── Step 7: Insurance Type & Notice ───────────────────────────────────────────
 def step_7():
-    st.markdown("### Step 7: Insurance Review")
+    st.markdown("### Step 7: Insurance Information")
 
     d = st.session_state.data
-    uf = st.session_state.uploaded_files
     has_insurance = d.get("has_insurance", True)
 
-    # ── Self-pay: skip card analysis ──────────────────────────────────────────
+    # Self-pay — no need to select insurance type
     if not has_insurance:
-        if st.session_state.ins_result is None:
-            result = analyze_insurance("self_pay")
-            st.session_state.ins_result = result
-            st.session_state.data.update({
-                "insurance_type": "self_pay",
-                "insurance_type_label": "Self-Pay",
-                "insurance_carrier": "N/A",
-                "insurance_result": result["result"],
-                "insurance_message": result["message"],
-                "pay_label": result["pay_label"],
-                "payment_type": result["status"],
-            })
-        _box("warn", f"<strong>💳 Self-Pay</strong><br><br>{st.session_state.ins_result['message']}")
+        result = analyze_insurance("self_pay")
+        _box("info", f"{result['message']}")
         cn1, cn2 = st.columns([1, 5])
         with cn1:
             if st.button("← Back", key="s7_back_sp"):
-                st.session_state.ins_result = None
                 _go(6)
                 _rerun()
         with cn2:
             if st.button("Next →", type="primary", key="s7_next_sp"):
+                st.session_state.data.update({
+                    "insurance_type": "self_pay",
+                    "insurance_type_label": "Self-Pay",
+                    "insurance_carrier": "N/A",
+                    "insurance_result": result["result"],
+                    "insurance_message": result["message"],
+                    "pay_label": result["pay_label"],
+                    "payment_type": result["status"],
+                })
                 _go(8)
                 _rerun()
         return
 
-    # ── Run card analysis if not done yet ─────────────────────────────────────
-    if not st.session_state.get("card_analysis"):
-        with st.spinner("Reading your insurance card… this takes about 10 seconds."):
-            analysis = analyze_card(
-                front_bytes=uf.get("ins_front_bytes", b""),
-                front_name=uf.get("ins_front_name", "card.jpg"),
-                back_bytes=uf.get("ins_back_bytes"),
-                back_name=uf.get("ins_back_name"),
-            )
-        st.session_state.card_analysis = analysis
-
-    analysis = st.session_state.card_analysis
-    detected_category = analysis.get("insurance_category", "unknown")
-    confidence = analysis.get("confidence", "none")
-    carrier = analysis.get("carrier_name", "")
-    plan_type = analysis.get("plan_type", "")
-    reasoning = analysis.get("reasoning", "")
-
-    # ── Show what we found ────────────────────────────────────────────────────
-    if analysis.get("analyzed") and confidence in ("high", "medium"):
-        st.markdown("#### What We Found on Your Card")
-        col1, col2 = st.columns(2)
-        with col1:
-            st.metric("Insurance Company", carrier or "—")
-        with col2:
-            st.metric("Plan Type", plan_type or "—")
-        if reasoning:
-            st.caption(f"_{reasoning}_")
-        st.markdown("---")
-
-    # ── Let patient confirm or correct ────────────────────────────────────────
+    # Select insurance type
     opts = [(k, v["label"]) for k, v in INSURANCE_TYPES.items() if k != "self_pay"]
     opt_keys = [k for k, _ in opts]
     opt_labels = [lbl for _, lbl in opts]
 
-    if detected_category != "unknown" and detected_category in opt_keys:
-        detected_idx = opt_keys.index(detected_category)
-        if confidence in ("high", "medium"):
-            st.markdown("**Does this look correct?**")
-        else:
-            st.markdown("**We were not fully certain from your card — please confirm or select the correct plan type:**")
-    else:
-        detected_idx = 0
-        _box("warn", "We could not read your card clearly. Please select your plan type below.")
+    prev_type = d.get("insurance_type", "")
+    def_idx = opt_keys.index(prev_type) if prev_type in opt_keys else 0
 
-    confirmed_idx = st.selectbox(
-        "Confirm or correct your insurance type: *",
+    sel_idx = st.selectbox(
+        "What type of insurance do you have? *",
         range(len(opt_labels)),
         format_func=lambda i: opt_labels[i],
-        index=detected_idx,
-        key="s7_ins_confirm",
+        index=def_idx,
+        key="s7_ins_type",
     )
-    final_category = opt_keys[confirmed_idx]
-
-    # ── Show eligibility result for selected category ──────────────────────────
-    result = analyze_insurance(final_category)
+    selected_key = opt_keys[sel_idx]
+    result = analyze_insurance(selected_key)
     result_code = result["result"]
 
-    st.markdown("#### Eligibility Result")
-    if result_code == "ELIGIBLE":
-        _box("ok", f"<strong>✅ Eligible</strong><br><br>{result['message']}")
-    elif result_code in ("CASH_PAY_SURGEON", "CASH_PAY_FULL"):
-        _box("warn", f"<strong>💳 Cash Pay Required</strong><br><br>{result['message']}")
-    elif result_code == "NOT_ELIGIBLE":
-        _box("err", f"<strong>❌ Not Eligible</strong><br><br>{result['message']}")
-    elif result_code == "OFFICE_CHECK":
-        _box("info", f"<strong>📋 Needs Verification</strong><br><br>{result['message']}")
-
-    ins_label = INSURANCE_TYPES.get(final_category, {}).get("label", "")
+    # Show appropriate notice
+    st.markdown("---")
+    if result_code == "NOT_ELIGIBLE":
+        _box("err", f"<strong>❌ Unable to Schedule</strong><br><br>{result['message']}")
+    elif result_code == "MA_WARNING":
+        _box("warn", f"<strong>⚠️ Please Note</strong><br><br>{result['message']}")
+    elif result_code == "CASH_PAY_FULL":
+        _box("info", f"{result['message']}")
+    else:
+        _box("ok", f"<strong>✅ Got it!</strong><br><br>{result['message']}")
 
     cn1, cn2 = st.columns([1, 5])
     with cn1:
         if st.button("← Back", key="s7_back"):
-            st.session_state.ins_result = None
-            st.session_state.card_analysis = None
             _go(6)
             _rerun()
     with cn2:
-        btn_label = "Next →" if result_code != "NOT_ELIGIBLE" else "Submit & Exit"
+        btn_label = "Submit & Exit" if result_code == "NOT_ELIGIBLE" else "Next →"
         if st.button(btn_label, type="primary", key="s7_next"):
-            # Save final insurance determination
-            st.session_state.ins_result = result
+            ins_label = INSURANCE_TYPES.get(selected_key, {}).get("label", "")
             st.session_state.data.update({
-                "insurance_type": final_category,
+                "insurance_type": selected_key,
                 "insurance_type_label": ins_label,
-                "insurance_carrier": carrier or "See uploaded card",
-                "insurance_result": result["result"],
+                "insurance_result": result_code,
                 "insurance_message": result["message"],
                 "pay_label": result["pay_label"],
                 "payment_type": result["status"],
-                "card_analysis_category": detected_category,
-                "card_analysis_confidence": confidence,
             })
             if result_code == "NOT_ELIGIBLE":
                 d["status"] = "ineligible_insurance"
