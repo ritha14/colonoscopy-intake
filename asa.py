@@ -25,17 +25,20 @@ ASA DEFINITIONS:
 - ASA 1: Healthy, no active medical problems
 - ASA 2: Mild, well-controlled systemic disease — NO functional limitation.
   Examples (these are ALL ASA 2, not ASA 3):
-  * Hypothyroidism on levothyroxine (well-controlled)
-  * Hypertension on medication (well-controlled)
-  * Type 2 diabetes, A1c < 8, no end-organ damage
-  * Mild obesity (BMI 30-39)
-  * Hyperlipidemia on statin
-  * GERD, anxiety, depression (well-controlled on medication)
-  * History of cancer with no current active disease
-  * Mild asthma (uses inhaler occasionally, not daily)
-  * Current smoker
-  * Controlled seizure disorder
+  * Hypothyroidism on any thyroid medication (levothyroxine, NP Thyroid, Armour Thyroid, Synthroid) = ASA 2
+  * Hypertension on medication (well-controlled) = ASA 2
+  * Type 2 diabetes, A1c < 8, no end-organ damage = ASA 2
+  * Mild obesity (BMI 30-39) = ASA 2
+  * Hyperlipidemia on statin = ASA 2
+  * GERD, anxiety, depression (well-controlled on medication) = ASA 2
+  * History of cancer with no current active disease = ASA 2
+  * Mild asthma (uses inhaler occasionally) = ASA 2
+  * Current smoker = ASA 2
+  * Social alcohol use — "social EtOH", "occasional alcohol", "social drinker", "1-2 drinks" = ASA 2 (NOT ASA 3)
+  * Prior orthopedic surgery (knee, hip, shoulder) with no current issues = does NOT affect ASA
   * Single well-controlled chronic condition on medication = ASA 2
+
+  IMPORTANT: "Social EtOH" or "social alcohol" means occasional social drinking = ASA 2. Only alcohol DEPENDENCE or ABUSE = ASA 3.
 
 - ASA 3: Severe systemic disease WITH functional limitation or poor control.
   Examples (these must be genuinely severe):
