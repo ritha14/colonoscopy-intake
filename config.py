@@ -53,4 +53,4 @@ HOSPITAL_CENTERS = [
     "Houston Methodist Hospital (TMC) — 6565 Fannin St, Houston, TX 77030",
 ]
 
-BMI_CONDITION = "My BMI is 45 or above (morbid obesity)"
+BMI_CONDITION = "My BMI is 45 or above"

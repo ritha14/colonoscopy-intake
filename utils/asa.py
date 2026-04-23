@@ -12,6 +12,6 @@ ASA3_CONDITIONS = [
     "My diabetes is poorly controlled (A1c above 8, or my doctor says it is uncontrolled)",
     "My blood pressure is poorly controlled (my doctor says it is uncontrolled)",
     "I have severe COPD or severe lung disease",
-    "My BMI is 45 or above (morbid obesity)",
+    "My BMI is 45 or above",
     "I have had a heart attack or stroke in the last 6 months",
 ]
