@@ -1,0 +1,6 @@
+.env
+__pycache__/
+*.pyc
+data/submissions.db
+data/*.db
+.DS_Store
