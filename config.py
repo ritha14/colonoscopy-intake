@@ -24,7 +24,7 @@ SMTP_HOST = _get("SMTP_HOST", "smtp.gmail.com")
 SMTP_PORT = int(_get("SMTP_PORT", "587"))
 SMTP_USER = _get("SMTP_USER", "")
 SMTP_PASSWORD = _get("SMTP_PASSWORD", "")
-FROM_EMAIL = _get("FROM_EMAIL", "info@houstoncommunitysurgical.com")
+FROM_EMAIL = _get("FROM_EMAIL", "ritha.belizaire@houstoncommunitysurgical.com")
 OFFICE_EMAIL = _get("OFFICE_EMAIL", "info@houstoncommunitysurgical.com")
 
 # Anthropic

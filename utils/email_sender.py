@@ -37,12 +37,9 @@ def send_office_email(data: dict, pdf_bytes: bytes, uploaded_files: dict) -> boo
         sub_id = data.get("submission_id", "N/A")
 
         msg = MIMEMultipart()
-        msg["From"] = f"Houston Community Surgical <{FROM_EMAIL}>"
+        msg["From"] = f"Dr. Ritha Belizaire <{FROM_EMAIL}>"
         msg["To"] = OFFICE_EMAIL
-        msg["Subject"] = (
-            f"New Colonoscopy Intake — {first} {last} "
-            f"[{sub_id}] {sub_date} | {data.get('insurance_result', '')} | ASA {data.get('asa_class', '?')}"
-        )
+        msg["Subject"] = f"New Direct Colonoscopy Request — {first} {last}"
 
         body = f"""New colonoscopy intake submission received.
 
