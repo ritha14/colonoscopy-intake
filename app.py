@@ -548,10 +548,12 @@ def s11():
         ok_office, ok_patient = send_emails(d, pdf, st.session_state.uf)
         prog.progress(100, text="Done!")
         if not ok_office:
-            st.warning("Office notification email could not be sent automatically. Please call (832) 979-5670 to confirm receipt.")
+            st.warning("Office notification email could not be sent. Please call (832) 979-5670 to confirm receipt.")
         if not ok_patient:
-            st.warning("Confirmation email could not be sent to you. Please download your PDF below.")
-    except Exception: pass
+            st.warning("Confirmation email could not be sent to the patient.")
+    except Exception as e:
+        st.error(f"Email error: {e}")
+        st.stop()
 
     st.session_state.done = True
     go(12); st.rerun()

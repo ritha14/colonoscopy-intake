@@ -15,9 +15,10 @@ from config import SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, FROM_EMAIL, O
 
 
 def _connect():
+    password = SMTP_PASSWORD.replace(" ", "")
     server = smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=20)
     server.starttls()
-    server.login(SMTP_USER, SMTP_PASSWORD)
+    server.login(SMTP_USER, password)
     return server
 
 

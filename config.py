@@ -14,7 +14,7 @@ def _get(key: str, default: str = "") -> str:
         return val
     try:
         import streamlit as st
-        return st.secrets.get(key, default)
+        return str(st.secrets[key])
     except Exception:
         return default
 
