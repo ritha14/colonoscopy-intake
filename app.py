@@ -55,6 +55,17 @@ div[data-testid="stButton"] > button[kind="secondary"] {
     border-radius: 8px !important;
 }
 
+/* ── File uploader browse button — white text ── */
+[data-testid="stFileUploaderDropzone"] button,
+[data-testid="stFileUploader"] button {
+    color: #ffffff !important;
+}
+[data-testid="stFileUploaderDropzone"] button *,
+[data-testid="stFileUploader"] button span,
+[data-testid="stFileUploader"] button p {
+    color: #ffffff !important;
+}
+
 /* ── Colored boxes ── */
 .box-info { background:#e8f4fd !important; border-left:5px solid #2c5f8a; padding:16px 20px; border-radius:6px; margin:12px 0; font-size:19px; line-height:1.75; color:#1a3a5c !important; }
 .box-warn { background:#fff3cd !important; border-left:5px solid #e67e00; padding:16px 20px; border-radius:6px; margin:12px 0; font-size:19px; line-height:1.75; color:#5a3e00 !important; }
