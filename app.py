@@ -28,62 +28,79 @@ st.markdown('<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@4
 
 st.markdown("""
 <style>
-/* ── Global font, size & contrast ── */
+/* ── Force light mode — prevents phone dark mode from inverting colors ── */
+:root { color-scheme: light only; }
+html, body, .stApp, [data-testid="stAppViewContainer"] {
+    background-color: #ffffff !important;
+    color: #111111 !important;
+}
+
+/* ── Global font ── */
 html, body, .stApp, [data-testid="stAppViewContainer"],
 p, li, span, div, label, input, textarea, button {
     font-family: 'Poppins', 'Helvetica Neue', Arial, sans-serif !important;
-    font-size: 19px !important;
 }
+
+/* ── Desktop font sizes ── */
 .stMarkdown p, .stMarkdown li {
     font-size: 19px !important;
     line-height: 1.75 !important;
     color: #111111 !important;
 }
-/* Input fields */
 .stTextInput input, .stTextArea textarea {
     font-size: 19px !important;
     color: #111 !important;
-    background: #fff !important;
+    background: #ffffff !important;
     border: 1.5px solid #b0b8c1 !important;
     border-radius: 6px !important;
 }
-/* Radio & checkbox labels */
 .stRadio label span p, .stCheckbox label span p {
     font-size: 19px !important;
     color: #111 !important;
 }
-/* Primary (Next) button */
 div[data-testid="stButton"] > button[kind="primary"] {
     font-size: 19px !important;
-    padding: 0.55rem 2rem !important;
+    padding: 0.6rem 2rem !important;
     font-weight: 700 !important;
     background: #1a3a5c !important;
-    color: #fff !important;
+    color: #ffffff !important;
     border: none !important;
     border-radius: 8px !important;
-    min-height: 48px !important;
+    min-height: 52px !important;
+    width: 100% !important;
 }
 div[data-testid="stButton"] > button[kind="primary"]:hover {
     background: #2c5f8a !important;
-    color: #fff !important;
+    color: #ffffff !important;
 }
-/* Secondary (Back) button */
 div[data-testid="stButton"] > button[kind="secondary"] {
     font-size: 17px !important;
     border-radius: 8px !important;
     color: #1a3a5c !important;
+    background: #ffffff !important;
 }
-/* Headings */
 h3 { font-size: 24px !important; color: #1a3a5c !important; font-weight: 700 !important; }
-/* Progress bar */
 .stProgress > div > div > div { background-color: #1a3a5c !important; }
-/* Colored boxes */
-.box-ok   { background:#d4edda; border-left:5px solid #28a745; padding:16px 20px; border-radius:6px; margin:12px 0; font-size:19px !important; line-height:1.75; }
-.box-warn { background:#fff3cd; border-left:5px solid #e67e00; padding:16px 20px; border-radius:6px; margin:12px 0; font-size:19px !important; line-height:1.75; }
-.box-err  { background:#f8d7da; border-left:5px solid #c0392b; padding:16px 20px; border-radius:6px; margin:12px 0; font-size:19px !important; line-height:1.75; }
-.box-info { background:#e8f4fd; border-left:5px solid #2c5f8a; padding:16px 20px; border-radius:6px; margin:12px 0; font-size:19px !important; line-height:1.75; }
-/* Caption */
-small, .stCaption { font-size: 15px !important; color: #555 !important; }
+
+/* ── Colored boxes — explicit colors so dark mode can't invert ── */
+.box-ok   { background:#d4edda !important; border-left:5px solid #28a745; padding:16px 20px; border-radius:6px; margin:12px 0; font-size:19px; line-height:1.75; color:#1a3a5c !important; }
+.box-warn { background:#fff3cd !important; border-left:5px solid #e67e00; padding:16px 20px; border-radius:6px; margin:12px 0; font-size:19px; line-height:1.75; color:#5a3e00 !important; }
+.box-err  { background:#f8d7da !important; border-left:5px solid #c0392b; padding:16px 20px; border-radius:6px; margin:12px 0; font-size:19px; line-height:1.75; color:#5a0a0a !important; }
+.box-info { background:#e8f4fd !important; border-left:5px solid #2c5f8a; padding:16px 20px; border-radius:6px; margin:12px 0; font-size:19px; line-height:1.75; color:#1a3a5c !important; }
+.box-ok *, .box-warn *, .box-err *, .box-info * { color: inherit !important; }
+
+small, .stCaption { font-size: 15px !important; color: #555555 !important; }
+
+/* ── Mobile adjustments ── */
+@media (max-width: 640px) {
+    .stMarkdown p, .stMarkdown li { font-size: 16px !important; }
+    .stTextInput input, .stTextArea textarea { font-size: 16px !important; }
+    .stRadio label span p, .stCheckbox label span p { font-size: 16px !important; }
+    div[data-testid="stButton"] > button[kind="primary"] { font-size: 17px !important; }
+    h3 { font-size: 20px !important; }
+    .box-ok, .box-warn, .box-err, .box-info { font-size: 16px !important; padding: 12px 14px; }
+}
+
 footer { visibility: hidden; }
 </style>
 """, unsafe_allow_html=True)
