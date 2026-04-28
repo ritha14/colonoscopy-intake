@@ -88,45 +88,8 @@ div[data-testid="stButton"] > button[kind="primary"]:hover {
     color: #ffffff !important;
 }
 
-/* ── Checkbox — white box with navy outline ── */
-input[type="checkbox"] {
-    -webkit-appearance: none !important;
-    appearance: none !important;
-    width: 22px !important;
-    height: 22px !important;
-    min-width: 22px !important;
-    border: 2.5px solid #1a3a5c !important;
-    border-radius: 4px !important;
-    background-color: #ffffff !important;
-    cursor: pointer !important;
-}
-input[type="checkbox"]:checked {
-    background-color: #1a3a5c !important;
-    border-color: #1a3a5c !important;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M13.485 1.431a1.473 1.473 0 0 0-2.072 0l-6.139 6.22-2.907-2.937a1.473 1.473 0 0 0-2.071 2.072l4 4.044a1.473 1.473 0 0 0 2.071 0l7.118-7.2a1.473 1.473 0 0 0 0-2.199z'/%3E%3C/svg%3E") !important;
-    background-repeat: no-repeat !important;
-    background-position: center !important;
-    background-size: 13px !important;
-}
-/* Streamlit renders checkboxes as custom components — target all possible selectors */
-[data-baseweb="checkbox"] > div,
-[data-baseweb="checkbox"] > div:first-child,
-[role="checkbox"],
-[data-testid="stCheckbox"] [data-baseweb="checkbox"] div {
-    background-color: #ffffff !important;
-    border-color: #1a3a5c !important;
-    border-width: 2px !important;
-    border-style: solid !important;
-}
-[data-baseweb="checkbox"][aria-checked="true"] > div,
-[role="checkbox"][aria-checked="true"] {
-    background-color: #1a3a5c !important;
-    border-color: #1a3a5c !important;
-}
-/* Prevent global color rule from making checkbox SVG icons dark */
-[data-testid="stCheckbox"] svg {
-    fill: #ffffff !important;
-}
+/* ── Checkboxes (ASA step) — accent color only ── */
+input[type="checkbox"] { accent-color: #1a3a5c !important; }
 
 /* ── Back button ── */
 div[data-testid="stButton"] > button[kind="secondary"] {
@@ -300,7 +263,9 @@ def s1():
             go(2); st.rerun()
         return
 
-    not_robot = st.checkbox("I confirm I am a real person completing this form for myself or a patient. *", key="not_robot")
+    not_robot = st.selectbox("Are you a real person completing this form? *",
+                             ["— Please select —", "Yes, I am a real person"],
+                             key="not_robot")
 
     if st.button("Next →", type="primary", key="s1"):
         errs = []
@@ -312,7 +277,7 @@ def s1():
         elif not phone_ok(phone): errs.append("Please enter a valid 10-digit phone number.")
         if not email.strip(): errs.append("Email address is required.")
         elif not email_ok(email): errs.append("Please enter a valid email address.")
-        if not not_robot: errs.append("Please confirm you are a real person before continuing.")
+        if not_robot != "Yes, I am a real person": errs.append("Please confirm you are a real person before continuing.")
         for e in errs: st.error(e)
         if errs: return
         a = age_from(dob)
