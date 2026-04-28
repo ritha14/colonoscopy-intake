@@ -110,6 +110,35 @@ h4 { color: #1a3a5c !important; }
 /* ── Caption ── */
 small, .stCaption { font-size: 15px !important; color: #2c5f8a !important; }
 
+/* ── File uploader — white bg, navy text, visible button ── */
+[data-testid="stFileUploader"] {
+    background: #ffffff !important;
+}
+[data-testid="stFileUploaderDropzone"] {
+    background: #f0f4f8 !important;
+    border: 2px dashed #2c5f8a !important;
+    border-radius: 8px !important;
+}
+[data-testid="stFileUploaderDropzone"] * {
+    color: #1a3a5c !important;
+    font-size: 15px !important;
+}
+[data-testid="stFileUploaderDropzone"] button {
+    background: #1a3a5c !important;
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: 6px !important;
+    font-size: 15px !important;
+    padding: 8px 16px !important;
+    margin-top: 8px !important;
+}
+[data-testid="stFileUploaderDropzone"] small,
+[data-testid="stFileUploaderDropzone"] span {
+    color: #1a3a5c !important;
+    font-size: 14px !important;
+    line-height: 1.5 !important;
+}
+
 /* ── Mobile adjustments ── */
 @media (max-width: 640px) {
     .stMarkdown p, .stMarkdown li { font-size: 16px !important; }
