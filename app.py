@@ -7,6 +7,7 @@ from datetime import datetime, date
 from pathlib import Path
 
 import streamlit as st
+import streamlit.components.v1 as components
 
 sys.path.insert(0, str(Path(__file__).parent))
 
@@ -568,13 +569,10 @@ def s8():
     except Exception:
         vid = YOUTUBE_VIDEO_ID
     if vid and vid.strip():
-        st.markdown(f"""
-<div style="position:relative; padding-bottom:56.25%; height:0; overflow:hidden; border-radius:8px; margin:12px 0;">
-  <iframe src="https://www.youtube.com/embed/{vid.strip()}"
-    style="position:absolute; top:0; left:0; width:100%; height:100%; border:0;"
-    allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture">
-  </iframe>
-</div>""", unsafe_allow_html=True)
+        components.iframe(
+            f"https://www.youtube.com/embed/{vid.strip()}",
+            height=340,
+        )
     else:
         box("warn", "📹 <strong>Video coming soon.</strong> Our office will share the link when scheduling. Call or text (832) 979-5670 with any questions.")
 
