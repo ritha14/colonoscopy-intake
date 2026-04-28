@@ -563,7 +563,10 @@ def s8():
     st.markdown("### Step 8: Colonoscopy Instruction Video")
     box("info", "Please watch the following video before completing your intake. It covers what to expect and how to prepare.")
 
-    vid = YOUTUBE_VIDEO_ID
+    try:
+        vid = st.secrets.get("YOUTUBE_VIDEO_ID", "") or YOUTUBE_VIDEO_ID
+    except Exception:
+        vid = YOUTUBE_VIDEO_ID
     if vid and vid.strip():
         st.markdown(f"""
 <div style="position:relative; padding-bottom:56.25%; height:0; overflow:hidden; border-radius:8px; margin:12px 0;">

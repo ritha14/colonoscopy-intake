@@ -15,6 +15,13 @@ PREP_PDF_PATH = Path(__file__).parent.parent / "assets" / "miralax_prep.pdf"
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, FROM_EMAIL, OFFICE_EMAIL, OFFICE_PHONE, YOUTUBE_VIDEO_ID
 
+def _get_youtube_id():
+    try:
+        import streamlit as st
+        return st.secrets.get("YOUTUBE_VIDEO_ID", "") or YOUTUBE_VIDEO_ID
+    except Exception:
+        return YOUTUBE_VIDEO_ID
+
 
 def _connect():
     password = SMTP_PASSWORD.replace(" ", "")
@@ -144,13 +151,14 @@ def send_patient_email(data: dict, pdf_bytes: bytes) -> bool:
         sub_id = data.get("submission_id", "N/A")
         location = data.get("location_preference", "")
 
+        vid_id = _get_youtube_id()
         video_section = ""
-        if YOUTUBE_VIDEO_ID and YOUTUBE_VIDEO_ID.strip():
+        if vid_id and vid_id.strip():
             video_section = f"""
     <div class="section">
       <h2>COLONOSCOPY INSTRUCTION VIDEO</h2>
       <p>Please watch this short video so you know exactly what to expect on the day of your procedure:</p>
-      <p><a href="https://www.youtube.com/watch?v={YOUTUBE_VIDEO_ID.strip()}"
+      <p><a href="https://www.youtube.com/watch?v={vid_id.strip()}"
             style="background:#1a3a5c; color:#fff; padding:10px 20px;
                    border-radius:6px; text-decoration:none; font-weight:700;
                    display:inline-block;">▶ Watch the Video</a></p>
