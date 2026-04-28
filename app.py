@@ -88,7 +88,7 @@ div[data-testid="stButton"] > button[kind="primary"]:hover {
     color: #ffffff !important;
 }
 
-/* ── Checkbox — white box with navy outline, navy fill when checked ── */
+/* ── Checkbox — white box with navy outline ── */
 input[type="checkbox"] {
     -webkit-appearance: none !important;
     appearance: none !important;
@@ -99,8 +99,6 @@ input[type="checkbox"] {
     border-radius: 4px !important;
     background-color: #ffffff !important;
     cursor: pointer !important;
-    flex-shrink: 0 !important;
-    vertical-align: middle !important;
 }
 input[type="checkbox"]:checked {
     background-color: #1a3a5c !important;
@@ -109,6 +107,25 @@ input[type="checkbox"]:checked {
     background-repeat: no-repeat !important;
     background-position: center !important;
     background-size: 13px !important;
+}
+/* Streamlit renders checkboxes as custom components — target all possible selectors */
+[data-baseweb="checkbox"] > div,
+[data-baseweb="checkbox"] > div:first-child,
+[role="checkbox"],
+[data-testid="stCheckbox"] [data-baseweb="checkbox"] div {
+    background-color: #ffffff !important;
+    border-color: #1a3a5c !important;
+    border-width: 2px !important;
+    border-style: solid !important;
+}
+[data-baseweb="checkbox"][aria-checked="true"] > div,
+[role="checkbox"][aria-checked="true"] {
+    background-color: #1a3a5c !important;
+    border-color: #1a3a5c !important;
+}
+/* Prevent global color rule from making checkbox SVG icons dark */
+[data-testid="stCheckbox"] svg {
+    fill: #ffffff !important;
 }
 
 /* ── Back button ── */
