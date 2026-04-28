@@ -28,36 +28,45 @@ st.markdown('<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@4
 
 st.markdown("""
 <style>
-/* ── Force light mode — prevents phone dark mode from inverting colors ── */
+/* ── Force light mode ── */
 :root { color-scheme: light only; }
-html, body, .stApp, [data-testid="stAppViewContainer"] {
+html, body, .stApp, [data-testid="stAppViewContainer"],
+[data-testid="stAppViewBlockContainer"], section[data-testid="stSidebar"],
+.main, .block-container {
     background-color: #ffffff !important;
-    color: #111111 !important;
+    color: #1a3a5c !important;
 }
 
-/* ── Global font ── */
+/* ── Global font & navy text everywhere ── */
 html, body, .stApp, [data-testid="stAppViewContainer"],
 p, li, span, div, label, input, textarea, button {
     font-family: 'Poppins', 'Helvetica Neue', Arial, sans-serif !important;
+    color: #1a3a5c !important;
 }
 
-/* ── Desktop font sizes ── */
+/* ── Body text ── */
 .stMarkdown p, .stMarkdown li {
     font-size: 19px !important;
     line-height: 1.75 !important;
-    color: #111111 !important;
+    color: #1a3a5c !important;
 }
+
+/* ── Input fields ── */
 .stTextInput input, .stTextArea textarea {
     font-size: 19px !important;
-    color: #111 !important;
+    color: #1a3a5c !important;
     background: #ffffff !important;
     border: 1.5px solid #b0b8c1 !important;
     border-radius: 6px !important;
 }
+
+/* ── Radio & checkbox labels ── */
 .stRadio label span p, .stCheckbox label span p {
     font-size: 19px !important;
-    color: #111 !important;
+    color: #1a3a5c !important;
 }
+
+/* ── Primary button (navy bg, white text) ── */
 div[data-testid="stButton"] > button[kind="primary"] {
     font-size: 19px !important;
     padding: 0.6rem 2rem !important;
@@ -73,23 +82,33 @@ div[data-testid="stButton"] > button[kind="primary"]:hover {
     background: #2c5f8a !important;
     color: #ffffff !important;
 }
+
+/* ── Back button ── */
 div[data-testid="stButton"] > button[kind="secondary"] {
     font-size: 17px !important;
     border-radius: 8px !important;
     color: #1a3a5c !important;
     background: #ffffff !important;
+    border: 1.5px solid #1a3a5c !important;
 }
+
+/* ── Headings & progress ── */
 h3 { font-size: 24px !important; color: #1a3a5c !important; font-weight: 700 !important; }
+h4 { color: #1a3a5c !important; }
 .stProgress > div > div > div { background-color: #1a3a5c !important; }
 
-/* ── Colored boxes — explicit colors so dark mode can't invert ── */
-.box-ok   { background:#d4edda !important; border-left:5px solid #28a745; padding:16px 20px; border-radius:6px; margin:12px 0; font-size:19px; line-height:1.75; color:#1a3a5c !important; }
-.box-warn { background:#fff3cd !important; border-left:5px solid #e67e00; padding:16px 20px; border-radius:6px; margin:12px 0; font-size:19px; line-height:1.75; color:#5a3e00 !important; }
-.box-err  { background:#f8d7da !important; border-left:5px solid #c0392b; padding:16px 20px; border-radius:6px; margin:12px 0; font-size:19px; line-height:1.75; color:#5a0a0a !important; }
+/* ── Colored boxes ── */
+/* Info: light blue bg, navy text — keep as requested */
 .box-info { background:#e8f4fd !important; border-left:5px solid #2c5f8a; padding:16px 20px; border-radius:6px; margin:12px 0; font-size:19px; line-height:1.75; color:#1a3a5c !important; }
+/* Warning: yellow bg, dark brown text — keep as requested */
+.box-warn { background:#fff3cd !important; border-left:5px solid #e67e00; padding:16px 20px; border-radius:6px; margin:12px 0; font-size:19px; line-height:1.75; color:#5a3e00 !important; }
+/* OK & Error: white bg, navy text */
+.box-ok  { background:#ffffff !important; border-left:5px solid #28a745; padding:16px 20px; border-radius:6px; margin:12px 0; font-size:19px; line-height:1.75; color:#1a3a5c !important; }
+.box-err { background:#ffffff !important; border-left:5px solid #c0392b; padding:16px 20px; border-radius:6px; margin:12px 0; font-size:19px; line-height:1.75; color:#1a3a5c !important; }
 .box-ok *, .box-warn *, .box-err *, .box-info * { color: inherit !important; }
 
-small, .stCaption { font-size: 15px !important; color: #555555 !important; }
+/* ── Caption ── */
+small, .stCaption { font-size: 15px !important; color: #2c5f8a !important; }
 
 /* ── Mobile adjustments ── */
 @media (max-width: 640px) {
