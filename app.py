@@ -564,17 +564,18 @@ def s8():
     st.markdown("### Step 8: Colonoscopy Instruction Video")
     box("info", "Please watch the following video before completing your intake. It covers what to expect and how to prepare.")
 
-    try:
-        vid = st.secrets.get("YOUTUBE_VIDEO_ID", "") or YOUTUBE_VIDEO_ID
-    except Exception:
-        vid = YOUTUBE_VIDEO_ID
-    if vid and vid.strip():
-        components.iframe(
-            f"https://www.youtube.com/embed/{vid.strip()}",
-            height=340,
-        )
-    else:
-        box("warn", "📹 <strong>Video coming soon.</strong> Our office will share the link when scheduling. Call or text (832) 979-5670 with any questions.")
+    VIDEO_ID = "Wml4B9fmDyE"
+    components.iframe(
+        f"https://www.youtube.com/embed/{VIDEO_ID}",
+        height=340,
+    )
+    st.markdown(
+        f'<a href="https://www.youtube.com/watch?v={VIDEO_ID}" target="_blank" '
+        f'style="display:inline-block; margin-top:8px; padding:10px 20px; '
+        f'background:#1a3a5c; color:#fff; border-radius:6px; text-decoration:none; font-weight:600;">'
+        f'▶ Watch on YouTube if video does not load</a>',
+        unsafe_allow_html=True,
+    )
 
     watched = st.radio("Video status: *",
                        ["Yes, I watched the video", "I'll watch it later"],
