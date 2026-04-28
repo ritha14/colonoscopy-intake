@@ -678,13 +678,13 @@ def s10():
     try:
         ok_office, ok_patient = send_emails(d, pdf, st.session_state.uf)
         prog.progress(100, text="Done!")
-        if not ok_office:
-            st.warning("Office notification email could not be sent. Please call (832) 979-5670 to confirm receipt.")
-        if not ok_patient:
-            st.warning("Confirmation email could not be sent to the patient.")
+        st.session_state.email_office_ok  = ok_office
+        st.session_state.email_patient_ok = ok_patient
     except Exception as e:
-        st.error(f"Email error: {e}")
-        st.stop()
+        print(f"Email send exception: {type(e).__name__}: {e}")
+        st.session_state.email_office_ok  = False
+        st.session_state.email_patient_ok = False
+        st.session_state.email_error      = str(e)
 
     st.session_state.done = True
     go(11); st.rerun()
@@ -694,6 +694,13 @@ def s10():
 def s11():
     st.markdown("### ✅ Your Request Has Been Received")
     d = st.session_state.d
+
+    # Show email status — visible here because warnings before st.rerun() get wiped
+    if not st.session_state.get("email_office_ok", True):
+        err = st.session_state.get("email_error", "")
+        st.warning(f"⚠️ Office notification email could not be sent. Please call (832) 979-5670 to confirm receipt.{' Error: ' + err if err else ''}")
+    if not st.session_state.get("email_patient_ok", True):
+        st.warning("⚠️ Patient confirmation email could not be sent.")
 
     box("ok", f"""
     <strong>Your intake has been sent to Dr. Belizaire's office.</strong><br><br>

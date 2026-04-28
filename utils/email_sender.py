@@ -17,26 +17,28 @@ from config import SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, FROM_EMAIL, O
 
 
 def _secrets():
-    """Read all credentials fresh from st.secrets at send time — not at import time."""
-    try:
-        import streamlit as st
-        s = st.secrets
-        return {
-            "host":     str(s.get("SMTP_HOST",     SMTP_HOST)),
-            "port":     int(s.get("SMTP_PORT",     str(SMTP_PORT))),
-            "user":     str(s.get("SMTP_USER",     SMTP_USER)),
-            "password": str(s.get("SMTP_PASSWORD", SMTP_PASSWORD)).replace(" ", ""),
-            "from":     str(s.get("FROM_EMAIL",    FROM_EMAIL)),
-            "office":   str(s.get("OFFICE_EMAIL",  OFFICE_EMAIL)),
-            "youtube":  str(s.get("YOUTUBE_VIDEO_ID", YOUTUBE_VIDEO_ID)),
-        }
-    except Exception:
-        return {
-            "host": SMTP_HOST, "port": SMTP_PORT,
-            "user": SMTP_USER, "password": SMTP_PASSWORD.replace(" ", ""),
-            "from": FROM_EMAIL, "office": OFFICE_EMAIL,
-            "youtube": YOUTUBE_VIDEO_ID,
-        }
+    """Read credentials from st.secrets (cloud) or os.environ (local) at call time."""
+    import os
+
+    def _s(key, default=""):
+        # Try st.secrets first (Streamlit Cloud)
+        try:
+            import streamlit as st
+            return str(st.secrets[key])
+        except Exception:
+            pass
+        # Fall back to environment variable (local .env)
+        return os.getenv(key, default)
+
+    return {
+        "host":     _s("SMTP_HOST",     "smtp.gmail.com"),
+        "port":     int(_s("SMTP_PORT", "587")),
+        "user":     _s("SMTP_USER",     ""),
+        "password": _s("SMTP_PASSWORD", "").replace(" ", ""),
+        "from":     _s("FROM_EMAIL",    ""),
+        "office":   _s("OFFICE_EMAIL",  "info@houstoncommunitysurgical.com"),
+        "youtube":  _s("YOUTUBE_VIDEO_ID", "Wml4B9fmDyE"),
+    }
 
 
 def _connect(creds):
