@@ -445,24 +445,28 @@ def s6():
     and if your insurance will not cover it, we can refer you to an in-network provider so you always have options.
     """)
 
-    st.markdown("#### Insurance Card")
-    st.caption("Take a photo or scan of the front and back of your insurance card.")
-
-    f = st.file_uploader("Insurance Card — FRONT *", type=["jpg","jpeg","png","pdf"], key="ins_f")
+    st.markdown("#### Insurance Card — Front")
+    st.caption("Take a photo or scan of the FRONT of your insurance card.")
+    f = st.file_uploader("Front of insurance card", type=["jpg","jpeg","png","pdf"],
+                         key="ins_f", label_visibility="collapsed")
     if f:
         uf["ins_front_bytes"] = f.getvalue(); uf["ins_front_name"] = f.name
     if "ins_front_bytes" in uf:
         st.success(f"✅ Front uploaded: {uf.get('ins_front_name','file')}")
 
-    b = st.file_uploader("Insurance Card — BACK *", type=["jpg","jpeg","png","pdf"], key="ins_b")
+    st.markdown("#### Insurance Card — Back")
+    st.caption("Take a photo or scan of the BACK of your insurance card.")
+    b = st.file_uploader("Back of insurance card", type=["jpg","jpeg","png","pdf"],
+                         key="ins_b", label_visibility="collapsed")
     if b:
         uf["ins_back_bytes"] = b.getvalue(); uf["ins_back_name"] = b.name
     if "ins_back_bytes" in uf:
         st.success(f"✅ Back uploaded: {uf.get('ins_back_name','file')}")
 
     st.markdown("#### Photo ID")
-    st.caption("Upload a photo of your driver's license or government-issued ID.")
-    dl = st.file_uploader("Driver's License / Photo ID *", type=["jpg","jpeg","png","pdf"], key="dl_f")
+    st.caption("Take a photo of your driver's license or government-issued ID.")
+    dl = st.file_uploader("Photo ID", type=["jpg","jpeg","png","pdf"],
+                          key="dl_f", label_visibility="collapsed")
     if dl:
         uf["dl_bytes"] = dl.getvalue(); uf["dl_name"] = dl.name
     if "dl_bytes" in uf:
