@@ -78,9 +78,23 @@ div[data-testid="stButton"] > button[kind="primary"] {
     min-height: 52px !important;
     width: 100% !important;
 }
+div[data-testid="stButton"] > button[kind="primary"] *,
+div[data-testid="stButton"] > button[kind="primary"] p,
+div[data-testid="stButton"] > button[kind="primary"] span {
+    color: #ffffff !important;
+}
 div[data-testid="stButton"] > button[kind="primary"]:hover {
     background: #2c5f8a !important;
     color: #ffffff !important;
+}
+
+/* ── Checkbox — outline only when unchecked, navy when checked ── */
+input[type="checkbox"] {
+    accent-color: #1a3a5c !important;
+    background-color: #ffffff !important;
+    border: 2px solid #1a3a5c !important;
+    width: 20px !important;
+    height: 20px !important;
 }
 
 /* ── Back button ── */
