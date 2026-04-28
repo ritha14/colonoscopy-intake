@@ -15,24 +15,40 @@ PREP_PDF_PATH = Path(__file__).parent.parent / "assets" / "miralax_prep.pdf"
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, FROM_EMAIL, OFFICE_EMAIL, OFFICE_PHONE, YOUTUBE_VIDEO_ID
 
-def _get_youtube_id():
+
+def _secrets():
+    """Read all credentials fresh from st.secrets at send time — not at import time."""
     try:
         import streamlit as st
-        return st.secrets.get("YOUTUBE_VIDEO_ID", "") or YOUTUBE_VIDEO_ID
+        s = st.secrets
+        return {
+            "host":     str(s.get("SMTP_HOST",     SMTP_HOST)),
+            "port":     int(s.get("SMTP_PORT",     str(SMTP_PORT))),
+            "user":     str(s.get("SMTP_USER",     SMTP_USER)),
+            "password": str(s.get("SMTP_PASSWORD", SMTP_PASSWORD)).replace(" ", ""),
+            "from":     str(s.get("FROM_EMAIL",    FROM_EMAIL)),
+            "office":   str(s.get("OFFICE_EMAIL",  OFFICE_EMAIL)),
+            "youtube":  str(s.get("YOUTUBE_VIDEO_ID", YOUTUBE_VIDEO_ID)),
+        }
     except Exception:
-        return YOUTUBE_VIDEO_ID
+        return {
+            "host": SMTP_HOST, "port": SMTP_PORT,
+            "user": SMTP_USER, "password": SMTP_PASSWORD.replace(" ", ""),
+            "from": FROM_EMAIL, "office": OFFICE_EMAIL,
+            "youtube": YOUTUBE_VIDEO_ID,
+        }
 
 
-def _connect():
-    password = SMTP_PASSWORD.replace(" ", "")
-    server = smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=20)
+def _connect(creds):
+    server = smtplib.SMTP(creds["host"], creds["port"], timeout=20)
     server.starttls()
-    server.login(SMTP_USER, password)
+    server.login(creds["user"], creds["password"])
     return server
 
 
 def send_office_email(data: dict, pdf_bytes: bytes, uploaded_files: dict) -> bool:
-    if not SMTP_USER or not SMTP_PASSWORD:
+    creds = _secrets()
+    if not creds["user"] or not creds["password"]:
         print("EMAIL: SMTP not configured — skipping office email.")
         return False
 
@@ -42,8 +58,8 @@ def send_office_email(data: dict, pdf_bytes: bytes, uploaded_files: dict) -> boo
         sub_id = data.get("submission_id", "N/A")
 
         msg = MIMEMultipart("alternative")
-        msg["From"]    = f"HCS Intake <{FROM_EMAIL}>"
-        msg["To"]      = OFFICE_EMAIL
+        msg["From"]    = f"HCS Intake <{creds['from']}>"
+        msg["To"]      = creds["office"]
         msg["Subject"] = f"New Colonoscopy Intake — {first} {last}"
 
         html = f"""
@@ -127,7 +143,7 @@ def send_office_email(data: dict, pdf_bytes: bytes, uploaded_files: dict) -> boo
                                       filename=f"{fallback_name}{ext}")
                 msg.attach(attachment)
 
-        with _connect() as server:
+        with _connect(creds) as server:
             server.send_message(msg)
         return True
 
@@ -137,7 +153,8 @@ def send_office_email(data: dict, pdf_bytes: bytes, uploaded_files: dict) -> boo
 
 
 def send_patient_email(data: dict, pdf_bytes: bytes) -> bool:
-    if not SMTP_USER or not SMTP_PASSWORD:
+    creds = _secrets()
+    if not creds["user"] or not creds["password"]:
         print("EMAIL: SMTP not configured — skipping patient email.")
         return False
 
@@ -151,7 +168,7 @@ def send_patient_email(data: dict, pdf_bytes: bytes) -> bool:
         sub_id = data.get("submission_id", "N/A")
         location = data.get("location_preference", "")
 
-        vid_id = _get_youtube_id()
+        vid_id = creds["youtube"]
         video_section = ""
         if vid_id and vid_id.strip():
             video_section = f"""
@@ -249,7 +266,7 @@ def send_patient_email(data: dict, pdf_bytes: bytes) -> bool:
 </body></html>"""
 
         msg = MIMEMultipart("mixed")
-        msg["From"]    = f"Houston Community Surgical <{FROM_EMAIL}>"
+        msg["From"]    = f"Houston Community Surgical <{creds['from']}>"
         msg["To"]      = patient_email
         msg["Subject"] = "Your Colonoscopy Intake — Houston Community Surgical"
 
@@ -268,7 +285,7 @@ def send_patient_email(data: dict, pdf_bytes: bytes) -> bool:
                                  filename="MiraLAX_Prep_Instructions.pdf")
             msg.attach(prep_part)
 
-        with _connect() as server:
+        with _connect(creds) as server:
             server.send_message(msg)
         return True
 
