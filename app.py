@@ -37,11 +37,9 @@ html, body, .stApp, [data-testid="stAppViewContainer"],
     color: #1a3a5c !important;
 }
 
-/* ── Global font & navy text everywhere ── */
-html, body, .stApp, [data-testid="stAppViewContainer"],
-p, li, span, div, label, input, textarea, button {
+/* ── Global font ── */
+html, body, .stApp, [data-testid="stAppViewContainer"] {
     font-family: 'Poppins', 'Helvetica Neue', Arial, sans-serif !important;
-    color: #1a3a5c !important;
 }
 
 /* ── Body text ── */
@@ -263,9 +261,7 @@ def s1():
             go(2); st.rerun()
         return
 
-    not_robot = st.selectbox("Are you a real person completing this form? *",
-                             ["— Please select —", "Yes, I am a real person"],
-                             key="not_robot")
+    not_robot = st.checkbox("I confirm I am a real person completing this form for myself or a patient. *", key="not_robot")
 
     if st.button("Next →", type="primary", key="s1"):
         errs = []
@@ -277,7 +273,7 @@ def s1():
         elif not phone_ok(phone): errs.append("Please enter a valid 10-digit phone number.")
         if not email.strip(): errs.append("Email address is required.")
         elif not email_ok(email): errs.append("Please enter a valid email address.")
-        if not_robot != "Yes, I am a real person": errs.append("Please confirm you are a real person before continuing.")
+        if not not_robot: errs.append("Please confirm you are a real person before continuing.")
         for e in errs: st.error(e)
         if errs: return
         a = age_from(dob)
