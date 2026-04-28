@@ -24,13 +24,66 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
+st.markdown('<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">', unsafe_allow_html=True)
+
 st.markdown("""
 <style>
+/* ── Global font, size & contrast ── */
+html, body, .stApp, [data-testid="stAppViewContainer"],
+p, li, span, div, label, input, textarea, button {
+    font-family: 'Poppins', 'Helvetica Neue', Arial, sans-serif !important;
+    font-size: 19px !important;
+}
+.stMarkdown p, .stMarkdown li {
+    font-size: 19px !important;
+    line-height: 1.75 !important;
+    color: #111111 !important;
+}
+/* Input fields */
+.stTextInput input, .stTextArea textarea {
+    font-size: 19px !important;
+    color: #111 !important;
+    background: #fff !important;
+    border: 1.5px solid #b0b8c1 !important;
+    border-radius: 6px !important;
+}
+/* Radio & checkbox labels */
+.stRadio label span p, .stCheckbox label span p {
+    font-size: 19px !important;
+    color: #111 !important;
+}
+/* Primary (Next) button */
+div[data-testid="stButton"] > button[kind="primary"] {
+    font-size: 19px !important;
+    padding: 0.55rem 2rem !important;
+    font-weight: 700 !important;
+    background: #1a3a5c !important;
+    color: #fff !important;
+    border: none !important;
+    border-radius: 8px !important;
+    min-height: 48px !important;
+}
+div[data-testid="stButton"] > button[kind="primary"]:hover {
+    background: #2c5f8a !important;
+    color: #fff !important;
+}
+/* Secondary (Back) button */
+div[data-testid="stButton"] > button[kind="secondary"] {
+    font-size: 17px !important;
+    border-radius: 8px !important;
+    color: #1a3a5c !important;
+}
+/* Headings */
+h3 { font-size: 24px !important; color: #1a3a5c !important; font-weight: 700 !important; }
+/* Progress bar */
 .stProgress > div > div > div { background-color: #1a3a5c !important; }
-.box-ok   { background:#d4edda; border-left:4px solid #28a745; padding:14px 18px; border-radius:4px; margin:10px 0; }
-.box-warn { background:#fff3cd; border-left:4px solid #e67e00; padding:14px 18px; border-radius:4px; margin:10px 0; }
-.box-err  { background:#f8d7da; border-left:4px solid #c0392b; padding:14px 18px; border-radius:4px; margin:10px 0; }
-.box-info { background:#e8f4fd; border-left:4px solid #2c5f8a; padding:14px 18px; border-radius:4px; margin:10px 0; }
+/* Colored boxes */
+.box-ok   { background:#d4edda; border-left:5px solid #28a745; padding:16px 20px; border-radius:6px; margin:12px 0; font-size:19px !important; line-height:1.75; }
+.box-warn { background:#fff3cd; border-left:5px solid #e67e00; padding:16px 20px; border-radius:6px; margin:12px 0; font-size:19px !important; line-height:1.75; }
+.box-err  { background:#f8d7da; border-left:5px solid #c0392b; padding:16px 20px; border-radius:6px; margin:12px 0; font-size:19px !important; line-height:1.75; }
+.box-info { background:#e8f4fd; border-left:5px solid #2c5f8a; padding:16px 20px; border-radius:6px; margin:12px 0; font-size:19px !important; line-height:1.75; }
+/* Caption */
+small, .stCaption { font-size: 15px !important; color: #555 !important; }
 footer { visibility: hidden; }
 </style>
 """, unsafe_allow_html=True)
@@ -85,18 +138,24 @@ def init():
     if "done" not in st.session_state:
         st.session_state.done = False
 
-STEPS = 11
+STEPS = 10
 STEP_NAMES = {
     1:"Welcome & Demographics", 2:"Chief Complaint & Symptoms",
     3:"Medical History", 4:"Medications, Allergies & Screening",
-    5:"Primary Care Doctor", 6:"Insurance & ID", 7:"Insurance Information",
-    8:"Medical Safety Check", 9:"Instruction Video", 10:"Surgery Center",
-    11:"Submitting", 12:"Complete",
+    5:"Primary Care Doctor", 6:"Insurance",
+    7:"Medical Safety Check", 8:"Instruction Video",
+    9:"Surgery Center", 10:"Submitting",
+    11:"Complete", 12:"Pre-Procedure Visit Required",
 }
 
 def header():
-    st.markdown("## Houston Community Surgical")
-    st.markdown("**Dr. Ritha Belizaire MD FACS FASCRS** — Direct-to-Colonoscopy Intake")
+    logo = Path(__file__).parent / "assets" / "logo.png"
+    if logo.exists():
+        col = st.columns([1, 6, 1])[1]
+        with col:
+            st.image(str(logo), use_container_width=True)
+    else:
+        st.markdown("## Houston Community Surgical")
     n = st.session_state.step
     if 1 <= n <= STEPS:
         st.progress((n-1)/(STEPS-1))
@@ -131,6 +190,8 @@ def s1():
             go(2); st.rerun()
         return
 
+    not_robot = st.checkbox("I confirm I am a real person completing this form for myself or a patient. *", key="not_robot")
+
     if st.button("Next →", type="primary", key="s1"):
         errs = []
         if not first.strip(): errs.append("First name is required.")
@@ -141,6 +202,7 @@ def s1():
         elif not phone_ok(phone): errs.append("Please enter a valid 10-digit phone number.")
         if not email.strip(): errs.append("Email address is required.")
         elif not email_ok(email): errs.append("Please enter a valid email address.")
+        if not not_robot: errs.append("Please confirm you are a real person before continuing.")
         for e in errs: st.error(e)
         if errs: return
         a = age_from(dob)
@@ -244,6 +306,33 @@ def s4():
     meds = st.text_area("Medications *", value=d.get("medications",""), height=100,
                         placeholder="Example: Lisinopril 10mg, aspirin 81mg, Vitamin D, NP Thyroid. Or: None")
 
+    st.markdown("#### Important Medication Questions")
+    st.caption("Please answer all three questions. These affect how we prepare you for your procedure.")
+
+    glp1_idx = 1 if d.get("glp1") == "yes" else 0
+    glp1 = st.radio(
+        "Do you take any GLP-1 medications? (semaglutide [Wegovy/Ozempic], tirzepatide [Zepbound/Mounjaro], liraglutide [Victoza/Saxenda], or any other GLP-1) *",
+        ["No", "Yes"], index=glp1_idx, key="glp1_r"
+    )
+    if glp1 == "Yes":
+        box("warn", "⚠️ <strong>GLP-1 Notice:</strong> You will need to stop your GLP-1 medication <strong>1 week before your procedure.</strong> If it has not been stopped in time, the surgery center may cancel your procedure.")
+
+    bt_idx = 1 if d.get("blood_thinners") == "yes" else 0
+    blood_thinners = st.radio(
+        "Do you take any blood thinners other than a baby aspirin? (e.g., Coumadin/warfarin, Lovenox, Xarelto, Eliquis, etc.) *",
+        ["No", "Yes"], index=bt_idx, key="bt_r"
+    )
+    if blood_thinners == "Yes":
+        box("warn", "⚠️ <strong>Blood Thinner Notice:</strong> Patients on blood thinners need to speak with Dr. Belizaire before scheduling. You will not be able to go direct — our office will discuss your options with you.")
+
+    ins_idx = 1 if d.get("injectable_insulin") == "yes" else 0
+    injectable_insulin = st.radio(
+        "Do you take injectable insulin (not insulin pills)? *",
+        ["No", "Yes"], index=ins_idx, key="ins_r"
+    )
+    if injectable_insulin == "Yes":
+        box("info", "📋 <strong>Insulin users:</strong> Your prep instructions include specific guidance on what to do with your insulin before the procedure. Please read those instructions carefully when you receive them.")
+
     st.markdown("#### Allergies")
     st.caption("Allergies to medications, foods, or latex, and your reaction.")
     allg = st.text_area("Allergies *", value=d.get("allergies",""), height=80,
@@ -263,8 +352,14 @@ def s4():
                 if not val.strip(): errs.append(f"{label} is required. Write 'None' if it does not apply.")
             for e in errs: st.error(e)
             if errs: return
-            st.session_state.d.update({"medications": meds.strip(),
-                                       "allergies": allg.strip(), "prior_screening": scrn.strip()})
+            st.session_state.d.update({
+                "medications": meds.strip(),
+                "allergies": allg.strip(),
+                "prior_screening": scrn.strip(),
+                "glp1": glp1.lower(),
+                "blood_thinners": blood_thinners.lower(),
+                "injectable_insulin": injectable_insulin.lower(),
+            })
             go(5); st.rerun()
 
 # ── Step 5: PCP ───────────────────────────────────────────────────────────────
@@ -295,102 +390,76 @@ def s5():
                                        "pcp_phone": pcp_ph.strip(), "pcp_fax": pcp_fax.strip()})
             go(6); st.rerun()
 
-# ── Step 6: Insurance & ID Upload ─────────────────────────────────────────────
+# ── Step 6: Insurance & ID ────────────────────────────────────────────────────
 def s6():
     st.markdown("### Step 6: Insurance & ID")
     d = st.session_state.d
     uf = st.session_state.uf
 
-    has_ins = st.radio("Do you have health insurance? *",
-                       ["Yes, I have insurance", "No, I am self-pay"],
-                       index=0 if d.get("has_insurance", True) else 1)
-    has_insurance = has_ins.startswith("Yes")
+    box("info", """
+    <strong>Insurance Verification</strong><br><br>
+    Please upload your insurance card and a photo ID below.
+    We will check with your insurance company to confirm that your procedure will be covered
+    <strong>before we schedule anything.</strong><br><br>
+    If there is anything out of pocket, we will let you know up front —
+    and if your insurance will not cover it, we can refer you to an in-network provider so you always have options.
+    """)
 
-    ph_name, ph_dob = "", ""
-    ph = "self"
+    st.markdown("#### Insurance Card")
+    st.caption("Take a photo or scan of the front and back of your insurance card.")
 
-    if has_insurance:
-        st.markdown("#### Insurance Card")
-        st.caption("Upload the front and back of your insurance card (photo or scan).")
+    f = st.file_uploader("Insurance Card — FRONT *", type=["jpg","jpeg","png","pdf"], key="ins_f")
+    if f:
+        uf["ins_front_bytes"] = f.getvalue(); uf["ins_front_name"] = f.name
+    if "ins_front_bytes" in uf:
+        st.success(f"✅ Front uploaded: {uf.get('ins_front_name','file')}")
 
-        f = st.file_uploader("Insurance Card — FRONT *", type=["jpg","jpeg","png","pdf"], key="ins_f")
-        if f:
-            uf["ins_front_bytes"] = f.getvalue(); uf["ins_front_name"] = f.name
-        if "ins_front_bytes" in uf:
-            st.success(f"✅ Front: {uf.get('ins_front_name','file')}")
+    b = st.file_uploader("Insurance Card — BACK *", type=["jpg","jpeg","png","pdf"], key="ins_b")
+    if b:
+        uf["ins_back_bytes"] = b.getvalue(); uf["ins_back_name"] = b.name
+    if "ins_back_bytes" in uf:
+        st.success(f"✅ Back uploaded: {uf.get('ins_back_name','file')}")
 
-        b = st.file_uploader("Insurance Card — BACK *", type=["jpg","jpeg","png","pdf"], key="ins_b")
-        if b:
-            uf["ins_back_bytes"] = b.getvalue(); uf["ins_back_name"] = b.name
-        if "ins_back_bytes" in uf:
-            st.success(f"✅ Back: {uf.get('ins_back_name','file')}")
-
-        st.markdown("#### Policy Holder")
-        ph_choice = st.radio("Are you the policy holder? *",
-                             ["Yes, I am the policy holder", "No, someone else holds the policy"],
-                             index=0 if d.get("policy_holder","self") == "self" else 1)
-        if ph_choice.startswith("No"):
-            ph = "other"
-            pc1, pc2 = st.columns(2)
-            with pc1: ph_name = st.text_input("Policy holder's full name *", value=d.get("policy_holder_name",""))
-            with pc2: ph_dob  = st.text_input("Policy holder's DOB (MM/DD/YYYY) *", value=d.get("policy_holder_dob",""))
-
-    st.markdown("#### Driver's License / Government ID")
-    st.caption("Upload a photo or scan of your driver's license or government-issued ID.")
-    dl = st.file_uploader("Driver's License / ID *", type=["jpg","jpeg","png","pdf"], key="dl_f")
+    st.markdown("#### Photo ID")
+    st.caption("Upload a photo of your driver's license or government-issued ID.")
+    dl = st.file_uploader("Driver's License / Photo ID *", type=["jpg","jpeg","png","pdf"], key="dl_f")
     if dl:
         uf["dl_bytes"] = dl.getvalue(); uf["dl_name"] = dl.name
     if "dl_bytes" in uf:
-        st.success(f"✅ ID: {uf.get('dl_name','file')}")
+        st.success(f"✅ ID uploaded: {uf.get('dl_name','file')}")
+
+    box("ok", "✅ <strong>No surprises.</strong> We confirm your coverage first, then we schedule your procedure.")
 
     cn1, cn2 = st.columns([1,5])
     with cn1: back_btn(5, "s6b")
     with cn2:
-        if st.button("Next →", type="primary", key="s6"):
+        if st.button("Next →", type="primary", key="s6n"):
             errs = []
-            if has_insurance:
-                if "ins_front_bytes" not in uf: errs.append("Please upload the FRONT of your insurance card.")
-                if "ins_back_bytes"  not in uf: errs.append("Please upload the BACK of your insurance card.")
-                if ph == "other":
-                    if not ph_name.strip(): errs.append("Policy holder name is required.")
-                    if not ph_dob.strip():  errs.append("Policy holder date of birth is required.")
-                    elif parse_dob(ph_dob)[0] is None: errs.append("Please enter a valid policy holder DOB as MM/DD/YYYY.")
-            if "dl_bytes" not in uf: errs.append("Please upload your driver's license or government ID.")
+            if "ins_front_bytes" not in uf: errs.append("Please upload the FRONT of your insurance card.")
+            if "ins_back_bytes"  not in uf: errs.append("Please upload the BACK of your insurance card.")
+            if "dl_bytes"        not in uf: errs.append("Please upload your driver's license or photo ID.")
             for e in errs: st.error(e)
             if errs: return
-            st.session_state.d.update({
-                "has_insurance": has_insurance,
-                "policy_holder": ph, "policy_holder_name": ph_name.strip(), "policy_holder_dob": ph_dob.strip(),
-                "id_docs_note": "Uploaded and emailed to office",
+            d.update({
+                "insurance_message": "Office will verify coverage before scheduling",
+                "insurance_result": "PENDING",
+                "id_docs_note": "Insurance card + photo ID uploaded and emailed to office",
             })
             go(7); st.rerun()
 
-# ── Step 7: Insurance Information ─────────────────────────────────────────────
+
+# ── Step 7: Medical Safety Check ─────────────────────────────────────────────
 def s7():
-    st.markdown("### Step 7: Insurance Information")
-    d = st.session_state.d
+    st.markdown("### Step 7: Medical Safety Check")
 
     box("info", """
-    <strong>Insurance Coverage at Houston Community Surgical</strong><br><br>
-    Dr. Belizaire is <strong>in-network with Traditional Medicare</strong>.<br><br>
-    She is <strong>out-of-network with Medicare Advantage and Medicaid</strong>.<br><br>
-    She works with <strong>most commercial insurance plans</strong>.<br><br>
-    Our office will verify your insurance coverage <strong>before scheduling your procedure</strong>
-    to make sure there are <strong>no surprise bills</strong>. We will reach out to confirm your
-    benefits prior to setting your procedure date.
+    <strong>These questions are about serious medical conditions only.</strong><br><br>
+    Common, well-managed conditions like <strong>hypothyroidism, controlled blood pressure,
+    or controlled diabetes</strong> are <em>not</em> on this list and do not need to be checked.<br><br>
+    Only check a box if it <strong>exactly</strong> matches your current situation.
     """)
 
-    c1, c2 = st.columns([1,5])
-    with c1: back_btn(6, "s7b")
-    with c2:
-        if st.button("I Understand — Next →", type="primary", key="s7n"):
-            d["insurance_message"] = "Insurance information reviewed by patient"
-            go(8); st.rerun()
-
-# ── Step 8: ASA Checklist ─────────────────────────────────────────────────────
-def s8():
-    st.markdown("### Step 8: Medical Safety Check")
-    st.caption("Please check any of the following that apply to you. Leave unchecked if they do not apply.")
+    st.caption("Check any of the following that apply to you. Leave unchecked if they do not apply.")
 
     prior = st.session_state.d.get("asa_checked", [])
     checked = []
@@ -406,16 +475,17 @@ def s8():
     )
 
     c1, c2 = st.columns([1,5])
-    with c1: back_btn(7, "s8b")
+    with c1: back_btn(6, "s7b")
     with c2:
-        if st.button("Next →", type="primary", key="s8n"):
+        if st.button("Next →", type="primary", key="s7n"):
             if not checked and not none_checked:
                 st.error("Please check any that apply, or select 'None of these apply to me'.")
                 return
 
             bmi_flagged = BMI_CONDITION in checked
             other_flagged = [c for c in checked if c != BMI_CONDITION]
-            needs_office = len(other_flagged) > 0
+            blood_thinner_flagged = st.session_state.d.get("blood_thinners") == "yes"
+            needs_office = len(other_flagged) > 0 or blood_thinner_flagged
             bmi_only = bmi_flagged and not needs_office
             is_candidate = (none_checked and len(checked) == 0) or bmi_only
 
@@ -443,13 +513,14 @@ def s8():
                     save_submission(st.session_state.d)
                     send_emails(st.session_state.d, pdf, st.session_state.uf)
                 except Exception: pass
-                go(13); st.rerun()
+                go(12); st.rerun()
             else:
-                go(9); st.rerun()
+                go(8); st.rerun()
 
-# ── Step 9: Video ─────────────────────────────────────────────────────────────
-def s9():
-    st.markdown("### Step 9: Colonoscopy Instruction Video")
+
+# ── Step 8: Instruction Video ─────────────────────────────────────────────────
+def s8():
+    st.markdown("### Step 8: Colonoscopy Instruction Video")
     box("info", "Please watch the following video before completing your intake. It covers what to expect and how to prepare.")
 
     vid = YOUTUBE_VIDEO_ID
@@ -461,22 +532,23 @@ def s9():
     watched = st.radio("Video status: *",
                        ["Yes, I watched the video", "I'll watch it later"],
                        index=0 if st.session_state.d.get("video_watched") else 1,
-                       key="s9_vid")
+                       key="s8_vid")
 
     c1, c2 = st.columns([1,5])
-    with c1: back_btn(8, "s9b")
+    with c1: back_btn(7, "s8b")
     with c2:
-        if st.button("Next →", type="primary", key="s9n"):
+        if st.button("Next →", type="primary", key="s8n"):
             st.session_state.d["video_watched"] = watched.startswith("Yes")
-            go(10); st.rerun()
+            go(9); st.rerun()
 
-# ── Step 10: Location ─────────────────────────────────────────────────────────
-def s10():
+
+# ── Step 9: Surgery Center / Hospital ────────────────────────────────────────
+def s9():
     d = st.session_state.d
     bmi_only = d.get("bmi_only", False)
 
     if bmi_only:
-        st.markdown("### Step 10: Preferred Hospital")
+        st.markdown("### Step 9: Preferred Hospital")
         st.caption("Dr. Belizaire performs colonoscopies at two hospital locations.")
         locations = HOSPITAL_CENTERS
         label = "Choose your preferred hospital: *"
@@ -487,7 +559,7 @@ def s10():
                                   "6565 Fannin St, Houston, TX 77030<br><em>Texas Medical Center</em>"),
         }
     else:
-        st.markdown("### Step 10: Preferred Surgery Center")
+        st.markdown("### Step 9: Preferred Surgery Center")
         st.caption("Dr. Belizaire performs colonoscopies at two locations.")
         locations = SURGERY_CENTERS
         label = "Choose your preferred location: *"
@@ -510,16 +582,17 @@ def s10():
             break
 
     c1, c2 = st.columns([1,5])
-    with c1: back_btn(9, "s10b")
+    with c1: back_btn(8, "s9b")
     with c2:
-        if st.button("Submit My Request →", type="primary", key="s10n"):
+        if st.button("Submit My Request →", type="primary", key="s9n"):
             st.session_state.d["location_preference"] = loc
-            go(11); st.rerun()
+            go(10); st.rerun()
 
-# ── Step 11: Submit ───────────────────────────────────────────────────────────
-def s11():
+
+# ── Step 10: Submit ───────────────────────────────────────────────────────────
+def s10():
     if st.session_state.done:
-        go(12); st.rerun(); return
+        go(11); st.rerun(); return
 
     st.markdown("### Submitting Your Request…")
     d = st.session_state.d
@@ -556,10 +629,11 @@ def s11():
         st.stop()
 
     st.session_state.done = True
-    go(12); st.rerun()
+    go(11); st.rerun()
 
-# ── Step 12: Success ──────────────────────────────────────────────────────────
-def s12():
+
+# ── Step 11: Success ──────────────────────────────────────────────────────────
+def s11():
     st.markdown("### ✅ Your Request Has Been Received")
     d = st.session_state.d
 
@@ -576,6 +650,21 @@ def s12():
         st.download_button("📄 Download Referral PDF", data=st.session_state.pdf,
                            file_name=f"Referral_{d.get('last_name','')}_{d.get('first_name','')}.pdf",
                            mime="application/pdf")
+
+    if d.get("glp1") == "yes":
+        box("warn", """
+        ⚠️ <strong>GLP-1 Reminder:</strong> You indicated that you take a GLP-1 medication (Wegovy, Ozempic, Zepbound, Mounjaro, Victoza, Saxenda, or similar).<br><br>
+        <strong>You must stop your GLP-1 medication 1 week before your procedure.</strong>
+        If it has not been stopped, the surgery center may cancel your procedure on the day of your appointment.
+        Our office will confirm this with you when we contact you to schedule.
+        """)
+
+    if d.get("injectable_insulin") == "yes":
+        box("info", """
+        💉 <strong>Insulin Reminder:</strong> You indicated that you take injectable insulin.
+        Your prep instructions include specific guidance on what to do with your insulin before the procedure.
+        Please read those instructions carefully and follow them.
+        """)
 
     st.markdown("#### Bowel Preparation Instructions")
     box("info", """
@@ -595,32 +684,43 @@ def s12():
         for k in list(st.session_state.keys()): del st.session_state[k]
         st.rerun()
 
-# ── Step 13: Pre-Procedure Office Visit Required ──────────────────────────────
-def s13():
+
+# ── Step 12: Pre-Procedure Office Visit Required ──────────────────────────────
+def s12():
     st.markdown("### Your Information Has Been Received")
     d = st.session_state.d
+    if d.get("blood_thinners") == "yes":
+        reason = (
+            "Because you are on a blood thinner, Dr. Belizaire needs to speak with you "
+            "directly before your procedure can be scheduled. This is to make sure your "
+            "blood thinner is managed safely around the time of the procedure."
+        )
+    else:
+        reason = (
+            "Based on your medical history, Dr. Belizaire needs to meet with you in the "
+            "office before scheduling your procedure. This is standard practice to make sure "
+            "your procedure is as safe as possible for you."
+        )
     box("warn", f"""
-    <strong>⚠️ A Pre-Procedure Office Visit Is Required</strong><br><br>
-    Based on your medical history, Dr. Belizaire needs to meet with you in the office before
-    scheduling your procedure. This is standard practice to make sure your procedure is
-    as safe as possible for you.<br><br>
-    Please call or text us at <strong>{OFFICE_PHONE}</strong> to schedule your pre-procedure visit.
-    Our staff (Tamika or Kaye) will be happy to assist you.<br><br>
+    <strong>⚠️ You Cannot Be Scheduled Directly Online</strong><br><br>
+    {reason}<br><br>
+    Please call or text us at <strong>{OFFICE_PHONE}</strong> and our staff (Tamika or Kaye) will be happy to assist you.<br><br>
     Your intake information has already been sent to the office.
     """)
     if d.get("submission_id"):
         st.caption(f"Submission ID: {d.get('submission_id')} — {d.get('submission_date','')}")
     st.markdown(f"**Questions?** Call or text **{OFFICE_PHONE}** or email **info@houstoncommunitysurgical.com**")
-    if st.button("Start Over", key="restart13"):
+    if st.button("Start Over", key="restart12"):
         for k in list(st.session_state.keys()): del st.session_state[k]
         st.rerun()
+
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 def main():
     init()
     header()
     {1:s1, 2:s2, 3:s3, 4:s4, 5:s5, 6:s6, 7:s7, 8:s8,
-     9:s9, 10:s10, 11:s11, 12:s12, 13:s13}.get(st.session_state.step, s1)()
+     9:s9, 10:s10, 11:s11, 12:s12}.get(st.session_state.step, s1)()
 
 if __name__ == "__main__":
     main()

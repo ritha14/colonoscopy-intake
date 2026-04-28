@@ -166,31 +166,12 @@ def generate_referral_pdf(data: dict) -> bytes:
     _field(s, el, "Fax", data.get("pcp_fax"))
 
     # ── 11. Insurance ────────────────────────────────────────────────────────
-    _section(s, el, "11. INSURANCE INFORMATION")
-    _field(s, el, "Insurance Type", data.get("insurance_type_label"))
-    _field(s, el, "Carrier / Plan Name", data.get("insurance_carrier"))
-    ph = "Patient (self)" if data.get("policy_holder") == "self" else data.get("policy_holder_name", "")
-    _field(s, el, "Policy Holder", ph)
-    if data.get("policy_holder") == "other":
-        _field(s, el, "Policy Holder DOB", data.get("policy_holder_dob"))
-    _field(s, el, "ID Documents", data.get("id_docs_note", "Uploaded and emailed to office"))
-
-    # ── 12. Insurance Eligibility Determination ──────────────────────────────
-    _section(s, el, "12. INSURANCE ELIGIBILITY DETERMINATION")
-    ins_result = data.get("insurance_result", "")
-    if ins_result == "ELIGIBLE":
-        el.append(Paragraph("ELIGIBLE — In-Network / Covered", s["status_ok"]))
-    elif ins_result in ("CASH_PAY_SURGEON", "CASH_PAY_FULL"):
-        el.append(Paragraph(f"CASH PAY — {data.get('pay_label', ins_result)}", s["status_warn"]))
-    elif ins_result == "NOT_ELIGIBLE":
-        el.append(Paragraph("NOT ELIGIBLE — Medicaid", s["status_err"]))
-    else:
-        el.append(Paragraph(f"PENDING VERIFICATION — {ins_result}", s["field_value"]))
-    el.append(Spacer(1, 3))
-    _field(s, el, "Patient-Facing Message", data.get("insurance_message"))
+    _section(s, el, "11. INSURANCE")
+    _field(s, el, "Coverage Status", "Pending — office will verify with insurance before scheduling")
+    _field(s, el, "Patient Acknowledged", data.get("insurance_message", "Yes — patient confirmed"))
 
     # ── 13. ASA Classification ───────────────────────────────────────────────
-    _section(s, el, "13. ASA PHYSICAL STATUS CLASSIFICATION")
+    _section(s, el, "12. ASA PHYSICAL STATUS CLASSIFICATION")
     asa_class = data.get("asa_class", "?")
     is_candidate = data.get("is_candidate", False)
     asa_label = f"ASA {asa_class} — {'CANDIDATE for direct scheduling' if is_candidate else 'REQUIRES pre-procedure office visit'}"
@@ -205,23 +186,23 @@ def generate_referral_pdf(data: dict) -> bytes:
         _field(s, el, "Key Factors", ", ".join(factors))
 
     # ── 14. Payment Type ─────────────────────────────────────────────────────
-    _section(s, el, "14. PAYMENT TYPE")
+    _section(s, el, "13. PAYMENT TYPE")
     _field(s, el, "Payment Classification", data.get("pay_label", data.get("insurance_result")))
 
     # ── 15. Patient Decision ─────────────────────────────────────────────────
-    _section(s, el, "15. PATIENT DECISION")
+    _section(s, el, "14. PATIENT DECISION")
     _field(s, el, "Decision", data.get("patient_decision"))
 
     # ── 16. Instruction Video ────────────────────────────────────────────────
-    _section(s, el, "16. COLONOSCOPY INSTRUCTION VIDEO")
+    _section(s, el, "15. COLONOSCOPY INSTRUCTION VIDEO")
     _field(s, el, "Video Status", "Watched" if data.get("video_watched") else "Will watch later")
 
     # ── 17. Location Preference ──────────────────────────────────────────────
-    _section(s, el, "17. PREFERRED SURGERY CENTER")
+    _section(s, el, "16. PREFERRED SURGERY CENTER")
     _field(s, el, "Location", data.get("location_preference"))
 
     # ── 18. Submission Summary ───────────────────────────────────────────────
-    _section(s, el, "18. SUBMISSION SUMMARY")
+    _section(s, el, "17. SUBMISSION SUMMARY")
     _field(s, el, "Submission Status", data.get("status", "").upper())
     _field(s, el, "Submission Date", sub_date)
     _field(s, el, "Submission ID", sub_id)
