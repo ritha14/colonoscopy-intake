@@ -170,7 +170,7 @@ def header():
     if logo.exists():
         col = st.columns([1, 6, 1])[1]
         with col:
-            st.image(str(logo), use_container_width=True)
+            st.image(str(logo), width="stretch")
     else:
         st.markdown("## Houston Community Surgical")
     n = st.session_state.step
