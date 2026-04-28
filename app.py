@@ -179,14 +179,13 @@ def init():
     if "done" not in st.session_state:
         st.session_state.done = False
 
-STEPS = 10
+STEPS = 9
 STEP_NAMES = {
     1:"Welcome & Demographics", 2:"Chief Complaint & Symptoms",
     3:"Medical History", 4:"Medications, Allergies & Screening",
     5:"Primary Care Doctor", 6:"Insurance",
-    7:"Medical Safety Check", 8:"Instruction Video",
-    9:"Surgery Center", 10:"Submitting",
-    11:"Complete", 12:"Pre-Procedure Visit Required",
+    7:"Medical Safety Check", 9:"Surgery Center",
+    10:"Submitting", 11:"Complete", 12:"Pre-Procedure Visit Required",
 }
 
 def header():
@@ -556,7 +555,7 @@ def s7():
                 except Exception: pass
                 go(12); st.rerun()
             else:
-                go(8); st.rerun()
+                go(9); st.rerun()
 
 
 # ── Step 8: Instruction Video ─────────────────────────────────────────────────
@@ -637,7 +636,7 @@ def s9():
             break
 
     c1, c2 = st.columns([1,5])
-    with c1: back_btn(8, "s9b")
+    with c1: back_btn(7, "s9b")
     with c2:
         if st.button("Submit My Request →", type="primary", key="s9n"):
             st.session_state.d["location_preference"] = loc
@@ -721,9 +720,31 @@ def s11():
         Please read those instructions carefully and follow them.
         """)
 
+    st.markdown("#### Watch Your Prep Video")
+    VIDEO_ID = "Wml4B9fmDyE"
+    st.markdown(f"""
+<a href="https://www.youtube.com/watch?v={VIDEO_ID}" target="_blank" style="display:block; text-decoration:none;">
+  <div style="position:relative; border-radius:10px; overflow:hidden; margin:8px 0;">
+    <img src="https://img.youtube.com/vi/{VIDEO_ID}/hqdefault.jpg"
+         style="width:100%; display:block; border-radius:10px;" />
+    <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+                background:rgba(26,58,92,0.85); border-radius:50%;
+                width:64px; height:64px; display:flex; align-items:center; justify-content:center;">
+      <span style="color:#fff; font-size:28px; margin-left:4px;">&#9654;</span>
+    </div>
+  </div>
+  <div style="text-align:center; margin-top:8px; padding:12px;
+              background:#1a3a5c; color:#fff; border-radius:8px;
+              font-size:17px; font-weight:600;">
+    ▶ Tap to Watch the Colonoscopy Prep Video
+  </div>
+</a>
+""", unsafe_allow_html=True)
+
     st.markdown("#### Bowel Preparation Instructions")
     box("info", """
     Please download and read your MiraLAX prep instructions carefully.
+    All medications are <strong>over the counter</strong> — no prescription needed.
     <strong>Do not eat solid food after midnight the night before your procedure.</strong>
     """)
     prep = Path(__file__).parent / "assets" / "miralax_prep.pdf"
