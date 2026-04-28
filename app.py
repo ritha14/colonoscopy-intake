@@ -28,93 +28,51 @@ st.markdown('<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@4
 
 st.markdown("""
 <style>
-/* ── Force light mode ── */
-:root { color-scheme: light only; }
-html, body, .stApp, [data-testid="stAppViewContainer"],
-[data-testid="stAppViewBlockContainer"], section[data-testid="stSidebar"],
-.main, .block-container {
-    background-color: #ffffff !important;
-    color: #1a3a5c !important;
-}
-
-/* ── Global font ── */
-html, body, .stApp, [data-testid="stAppViewContainer"] {
+/* ── Poppins font (theme handles colors) ── */
+html, body, * {
     font-family: 'Poppins', 'Helvetica Neue', Arial, sans-serif !important;
 }
 
-/* ── Body text ── */
-.stMarkdown p, .stMarkdown li {
-    font-size: 19px !important;
-    line-height: 1.75 !important;
-    color: #1a3a5c !important;
-}
+/* ── Font sizes ── */
+.stMarkdown p, .stMarkdown li { font-size: 19px !important; line-height: 1.75 !important; }
+.stTextInput input, .stTextArea textarea { font-size: 19px !important; border-radius: 6px !important; }
+.stRadio label span p, .stCheckbox label span p { font-size: 19px !important; }
+h3 { font-size: 24px !important; font-weight: 700 !important; }
+small, .stCaption { font-size: 15px !important; }
 
-/* ── Input fields ── */
-.stTextInput input, .stTextArea textarea {
-    font-size: 19px !important;
-    color: #1a3a5c !important;
-    background: #ffffff !important;
-    border: 1.5px solid #b0b8c1 !important;
-    border-radius: 6px !important;
-}
-
-/* ── Radio & checkbox labels ── */
-.stRadio label span p, .stCheckbox label span p {
-    font-size: 19px !important;
-    color: #1a3a5c !important;
-}
-
-/* ── Primary button (navy bg, white text) ── */
+/* ── Primary button ── */
 div[data-testid="stButton"] > button[kind="primary"] {
     font-size: 19px !important;
     padding: 0.6rem 2rem !important;
     font-weight: 700 !important;
-    background: #1a3a5c !important;
-    color: #ffffff !important;
-    border: none !important;
-    border-radius: 8px !important;
     min-height: 52px !important;
     width: 100% !important;
+    border-radius: 8px !important;
 }
-div[data-testid="stButton"] > button[kind="primary"] *,
-div[data-testid="stButton"] > button[kind="primary"] p,
-div[data-testid="stButton"] > button[kind="primary"] span {
-    color: #ffffff !important;
-}
-div[data-testid="stButton"] > button[kind="primary"]:hover {
-    background: #2c5f8a !important;
-    color: #ffffff !important;
-}
-
-/* ── Checkboxes (ASA step) — accent color only ── */
-input[type="checkbox"] { accent-color: #1a3a5c !important; }
-
 /* ── Back button ── */
 div[data-testid="stButton"] > button[kind="secondary"] {
     font-size: 17px !important;
     border-radius: 8px !important;
-    color: #1a3a5c !important;
-    background: #ffffff !important;
-    border: 1.5px solid #1a3a5c !important;
 }
 
-/* ── Headings & progress ── */
-h3 { font-size: 24px !important; color: #1a3a5c !important; font-weight: 700 !important; }
-h4 { color: #1a3a5c !important; }
-.stProgress > div > div > div { background-color: #1a3a5c !important; }
-
 /* ── Colored boxes ── */
-/* Info: light blue bg, navy text — keep as requested */
 .box-info { background:#e8f4fd !important; border-left:5px solid #2c5f8a; padding:16px 20px; border-radius:6px; margin:12px 0; font-size:19px; line-height:1.75; color:#1a3a5c !important; }
-/* Warning: yellow bg, dark brown text — keep as requested */
 .box-warn { background:#fff3cd !important; border-left:5px solid #e67e00; padding:16px 20px; border-radius:6px; margin:12px 0; font-size:19px; line-height:1.75; color:#5a3e00 !important; }
-/* OK & Error: white bg, navy text */
-.box-ok  { background:#ffffff !important; border-left:5px solid #28a745; padding:16px 20px; border-radius:6px; margin:12px 0; font-size:19px; line-height:1.75; color:#1a3a5c !important; }
-.box-err { background:#ffffff !important; border-left:5px solid #c0392b; padding:16px 20px; border-radius:6px; margin:12px 0; font-size:19px; line-height:1.75; color:#1a3a5c !important; }
+.box-ok   { background:#ffffff !important; border-left:5px solid #28a745; padding:16px 20px; border-radius:6px; margin:12px 0; font-size:19px; line-height:1.75; color:#1a3a5c !important; }
+.box-err  { background:#ffffff !important; border-left:5px solid #c0392b; padding:16px 20px; border-radius:6px; margin:12px 0; font-size:19px; line-height:1.75; color:#1a3a5c !important; }
 .box-ok *, .box-warn *, .box-err *, .box-info * { color: inherit !important; }
 
-/* ── Caption ── */
-small, .stCaption { font-size: 15px !important; color: #2c5f8a !important; }
+/* ── Mobile adjustments ── */
+@media (max-width: 640px) {
+    .stMarkdown p, .stMarkdown li { font-size: 16px !important; }
+    .stTextInput input, .stTextArea textarea { font-size: 16px !important; }
+    .stRadio label span p, .stCheckbox label span p { font-size: 16px !important; }
+    div[data-testid="stButton"] > button[kind="primary"] { font-size: 17px !important; }
+    h3 { font-size: 20px !important; }
+    .box-ok, .box-warn, .box-err, .box-info { font-size: 16px !important; padding: 12px 14px; }
+}
+
+footer { visibility: hidden; }
 
 /* ── File uploader — white bg, navy text, visible button ── */
 [data-testid="stFileUploader"] {
