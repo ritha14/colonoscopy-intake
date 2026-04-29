@@ -445,25 +445,27 @@ def s6():
     and if your insurance will not cover it, we can refer you to an in-network provider so you always have options.
     """)
 
-    st.markdown('<p style="font-weight:700;font-size:16px;color:#1a3a5c;margin:20px 0 2px;">Insurance Card — Front</p><p style="font-size:14px;color:#555;margin:0 0 6px;">Take a photo or scan of the <strong>front</strong> of your insurance card.</p>', unsafe_allow_html=True)
-    f = st.file_uploader("Insurance Card Front", type=["jpg","jpeg","png","pdf"],
-                         key="ins_f", label_visibility="collapsed")
+    f = st.file_uploader("📷 Insurance Card — Front (photo or scan)",
+                         type=["jpg","jpeg","png","pdf"],
+                         key="ins_f", label_visibility="visible")
     if f:
         uf["ins_front_bytes"] = f.getvalue(); uf["ins_front_name"] = f.name
     if "ins_front_bytes" in uf:
         st.success(f"✅ Front uploaded: {uf.get('ins_front_name','file')}")
 
-    st.markdown('<p style="font-weight:700;font-size:16px;color:#1a3a5c;margin:20px 0 2px;">Insurance Card — Back</p><p style="font-size:14px;color:#555;margin:0 0 6px;">Take a photo or scan of the <strong>back</strong> of your insurance card.</p>', unsafe_allow_html=True)
-    b = st.file_uploader("Insurance Card Back", type=["jpg","jpeg","png","pdf"],
-                         key="ins_b", label_visibility="collapsed")
+    st.markdown("<div style='margin-top:16px'></div>", unsafe_allow_html=True)
+    b = st.file_uploader("📷 Insurance Card — Back (photo or scan)",
+                         type=["jpg","jpeg","png","pdf"],
+                         key="ins_b", label_visibility="visible")
     if b:
         uf["ins_back_bytes"] = b.getvalue(); uf["ins_back_name"] = b.name
     if "ins_back_bytes" in uf:
         st.success(f"✅ Back uploaded: {uf.get('ins_back_name','file')}")
 
-    st.markdown('<p style="font-weight:700;font-size:16px;color:#1a3a5c;margin:20px 0 2px;">Photo ID</p><p style="font-size:14px;color:#555;margin:0 0 6px;">Take a photo of your driver\'s license or government-issued ID.</p>', unsafe_allow_html=True)
-    dl = st.file_uploader("Photo ID", type=["jpg","jpeg","png","pdf"],
-                          key="dl_f", label_visibility="collapsed")
+    st.markdown("<div style='margin-top:16px'></div>", unsafe_allow_html=True)
+    dl = st.file_uploader("🪪 Photo ID — Driver's license or government-issued ID",
+                          type=["jpg","jpeg","png","pdf"],
+                          key="dl_f", label_visibility="visible")
     if dl:
         uf["dl_bytes"] = dl.getvalue(); uf["dl_name"] = dl.name
     if "dl_bytes" in uf:
