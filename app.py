@@ -445,26 +445,23 @@ def s6():
     and if your insurance will not cover it, we can refer you to an in-network provider so you always have options.
     """)
 
-    st.markdown("#### Insurance Card — Front")
-    st.caption("Take a photo or scan of the FRONT of your insurance card.")
-    f = st.file_uploader("Front of insurance card", type=["jpg","jpeg","png","pdf"],
+    st.markdown('<p style="font-weight:700;font-size:16px;color:#1a3a5c;margin:20px 0 2px;">Insurance Card — Front</p><p style="font-size:14px;color:#555;margin:0 0 6px;">Take a photo or scan of the <strong>front</strong> of your insurance card.</p>', unsafe_allow_html=True)
+    f = st.file_uploader("Insurance Card Front", type=["jpg","jpeg","png","pdf"],
                          key="ins_f", label_visibility="collapsed")
     if f:
         uf["ins_front_bytes"] = f.getvalue(); uf["ins_front_name"] = f.name
     if "ins_front_bytes" in uf:
         st.success(f"✅ Front uploaded: {uf.get('ins_front_name','file')}")
 
-    st.markdown("#### Insurance Card — Back")
-    st.caption("Take a photo or scan of the BACK of your insurance card.")
-    b = st.file_uploader("Back of insurance card", type=["jpg","jpeg","png","pdf"],
+    st.markdown('<p style="font-weight:700;font-size:16px;color:#1a3a5c;margin:20px 0 2px;">Insurance Card — Back</p><p style="font-size:14px;color:#555;margin:0 0 6px;">Take a photo or scan of the <strong>back</strong> of your insurance card.</p>', unsafe_allow_html=True)
+    b = st.file_uploader("Insurance Card Back", type=["jpg","jpeg","png","pdf"],
                          key="ins_b", label_visibility="collapsed")
     if b:
         uf["ins_back_bytes"] = b.getvalue(); uf["ins_back_name"] = b.name
     if "ins_back_bytes" in uf:
         st.success(f"✅ Back uploaded: {uf.get('ins_back_name','file')}")
 
-    st.markdown("#### Photo ID")
-    st.caption("Take a photo of your driver's license or government-issued ID.")
+    st.markdown('<p style="font-weight:700;font-size:16px;color:#1a3a5c;margin:20px 0 2px;">Photo ID</p><p style="font-size:14px;color:#555;margin:0 0 6px;">Take a photo of your driver\'s license or government-issued ID.</p>', unsafe_allow_html=True)
     dl = st.file_uploader("Photo ID", type=["jpg","jpeg","png","pdf"],
                           key="dl_f", label_visibility="collapsed")
     if dl:
@@ -775,6 +772,16 @@ def s11():
                            file_name="MiraLAX_Prep_Instructions.pdf", mime="application/pdf")
     else:
         st.info("Prep instructions will be provided by the office when your procedure is scheduled.")
+
+    st.markdown("#### Time Off")
+    box("info", """
+    <strong>Day before your procedure (prep day):</strong><br>
+    Your bowel prep starts at <strong>2:00 PM.</strong> Plan to take at least a <strong>half day off</strong> — you will need to stay close to a reliable bathroom once the prep begins.<br><br>
+    <strong>Day of your colonoscopy:</strong><br>
+    Take the <strong>entire day off.</strong> You will receive sedation and cannot drive yourself home. Plan for a trusted adult to bring you and take you home. You will feel groggy for the rest of the day.<br><br>
+    <strong>Day after your colonoscopy:</strong><br>
+    You are <strong>cleared to return to work, school, or normal activities.</strong> Most people feel completely back to normal by the next morning.
+    """)
 
     st.divider()
     st.markdown(f"**Questions?** Call or text **{OFFICE_PHONE}** or email **info@houstoncommunitysurgical.com**")
