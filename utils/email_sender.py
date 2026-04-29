@@ -17,27 +17,16 @@ from config import SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, FROM_EMAIL, O
 
 
 def _secrets():
-    """Read credentials from st.secrets (cloud) or os.environ (local) at call time."""
+    """Fallback credentials from module-level config (works locally via .env)."""
     import os
-
-    def _s(key, default=""):
-        # Try st.secrets first (Streamlit Cloud)
-        try:
-            import streamlit as st
-            return str(st.secrets[key])
-        except Exception:
-            pass
-        # Fall back to environment variable (local .env)
-        return os.getenv(key, default)
-
     return {
-        "host":     _s("SMTP_HOST",     "smtp.gmail.com"),
-        "port":     int(_s("SMTP_PORT", "587")),
-        "user":     _s("SMTP_USER",     ""),
-        "password": _s("SMTP_PASSWORD", "").replace(" ", ""),
-        "from":     _s("FROM_EMAIL",    ""),
-        "office":   _s("OFFICE_EMAIL",  "info@houstoncommunitysurgical.com"),
-        "youtube":  _s("YOUTUBE_VIDEO_ID", "Wml4B9fmDyE"),
+        "host":     os.getenv("SMTP_HOST",     SMTP_HOST or "smtp.gmail.com"),
+        "port":     int(os.getenv("SMTP_PORT", str(SMTP_PORT or 587))),
+        "user":     os.getenv("SMTP_USER",     SMTP_USER or ""),
+        "password": os.getenv("SMTP_PASSWORD", SMTP_PASSWORD or "").replace(" ", ""),
+        "from":     os.getenv("FROM_EMAIL",    FROM_EMAIL or ""),
+        "office":   os.getenv("OFFICE_EMAIL",  OFFICE_EMAIL or "info@houstoncommunitysurgical.com"),
+        "youtube":  os.getenv("YOUTUBE_VIDEO_ID", YOUTUBE_VIDEO_ID or "Wml4B9fmDyE"),
     }
 
 
@@ -48,8 +37,9 @@ def _connect(creds):
     return server
 
 
-def send_office_email(data: dict, pdf_bytes: bytes, uploaded_files: dict) -> bool:
-    creds = _secrets()
+def send_office_email(data: dict, pdf_bytes: bytes, uploaded_files: dict, creds: dict = None) -> bool:
+    if creds is None:
+        creds = _secrets()
     if not creds["user"] or not creds["password"]:
         print("EMAIL: SMTP not configured — skipping office email.")
         return False
@@ -154,8 +144,9 @@ def send_office_email(data: dict, pdf_bytes: bytes, uploaded_files: dict) -> boo
         return False
 
 
-def send_patient_email(data: dict, pdf_bytes: bytes) -> bool:
-    creds = _secrets()
+def send_patient_email(data: dict, pdf_bytes: bytes, creds: dict = None) -> bool:
+    if creds is None:
+        creds = _secrets()
     if not creds["user"] or not creds["password"]:
         print("EMAIL: SMTP not configured — skipping patient email.")
         return False
@@ -296,9 +287,11 @@ def send_patient_email(data: dict, pdf_bytes: bytes) -> bool:
         return False
 
 
-def send_emails(data: dict, pdf_bytes: bytes, uploaded_files: dict = None) -> tuple:
+def send_emails(data: dict, pdf_bytes: bytes, uploaded_files: dict = None, creds: dict = None) -> tuple:
     if uploaded_files is None:
         uploaded_files = {}
-    office_ok  = send_office_email(data, pdf_bytes, uploaded_files)
-    patient_ok = send_patient_email(data, pdf_bytes)
+    if creds is None:
+        creds = _secrets()
+    office_ok  = send_office_email(data, pdf_bytes, uploaded_files, creds)
+    patient_ok = send_patient_email(data, pdf_bytes, creds)
     return office_ok, patient_ok
