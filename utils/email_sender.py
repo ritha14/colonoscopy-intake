@@ -2,18 +2,32 @@
 Email sender using Gmail SMTP via SSL (port 465).
 Credentials passed in from app.py where st.secrets is guaranteed available.
 """
+import io
 import smtplib
 import sys
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.application import MIMEApplication
 from pathlib import Path
+from PIL import Image
 
 PREP_PDF_PATH    = Path(__file__).parent.parent / "assets" / "miralax_prep.pdf"
 YOUTUBE_VIDEO_ID = "Wml4B9fmDyE"
 OFFICE_PHONE     = "(832) 979-5670"
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
+
+
+def _compress_image(data: bytes, max_px: int = 1400, quality: int = 75) -> bytes:
+    try:
+        img = Image.open(io.BytesIO(data))
+        img = img.convert("RGB")
+        img.thumbnail((max_px, max_px), Image.LANCZOS)
+        buf = io.BytesIO()
+        img.save(buf, format="JPEG", quality=quality, optimize=True)
+        return buf.getvalue()
+    except Exception:
+        return data
 
 
 def _connect(creds: dict):
@@ -102,11 +116,10 @@ def send_office_email(data: dict, pdf_bytes: bytes, uploaded_files: dict, creds:
     for bytes_key, (name_key, fallback_name) in file_map.items():
         file_data = uploaded_files.get(bytes_key)
         if file_data:
-            orig_name = uploaded_files.get(name_key, "")
-            ext = Path(orig_name).suffix if orig_name else ".jpg"
+            file_data = _compress_image(file_data)
             attachment = MIMEApplication(file_data)
             attachment.add_header("Content-Disposition", "attachment",
-                                  filename=f"{fallback_name}{ext}")
+                                  filename=f"{fallback_name}.jpg")
             msg.attach(attachment)
 
     with _connect(creds) as server:
@@ -235,6 +248,19 @@ def send_emails(data: dict, pdf_bytes: bytes, uploaded_files: dict = None, creds
         uploaded_files = {}
     if not creds or not creds.get("user") or not creds.get("password"):
         raise ValueError("SMTP credentials missing from secrets.")
-    office_ok  = send_office_email(data, pdf_bytes, uploaded_files, creds)
-    patient_ok = send_patient_email(data, pdf_bytes, creds)
-    return office_ok, patient_ok
+    office_err = None
+    try:
+        office_ok = send_office_email(data, pdf_bytes, uploaded_files, creds)
+    except Exception as e:
+        office_ok  = False
+        office_err = str(e)
+
+    patient_err = None
+    try:
+        patient_ok = send_patient_email(data, pdf_bytes, creds)
+    except Exception as e:
+        patient_ok  = False
+        patient_err = str(e)
+
+    error = " | ".join(filter(None, [office_err, patient_err]))
+    return office_ok, patient_ok, error

@@ -687,11 +687,11 @@ def s10():
         raise ValueError(f"Could not load SMTP credentials from secrets: {e}")
 
     try:
-        ok_office, ok_patient = send_emails(d, pdf, st.session_state.uf, creds=creds)
+        ok_office, ok_patient, email_err = send_emails(d, pdf, st.session_state.uf, creds=creds)
         prog.progress(100, text="Done!")
         st.session_state.email_office_ok  = ok_office
         st.session_state.email_patient_ok = ok_patient
-        st.session_state.email_error      = ""
+        st.session_state.email_error      = email_err
     except Exception as e:
         st.session_state.email_office_ok  = False
         st.session_state.email_patient_ok = False
