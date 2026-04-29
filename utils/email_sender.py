@@ -114,8 +114,7 @@ def send_office_email(data: dict, pdf_bytes: bytes, uploaded_files: dict, api_ke
         return True
 
     except Exception as e:
-        print(f"Office email error: {type(e).__name__}: {e}")
-        return False
+        raise RuntimeError(f"Office email failed: {type(e).__name__}: {e}")
 
 
 def send_patient_email(data: dict, pdf_bytes: bytes, api_key: str) -> bool:
@@ -242,8 +241,7 @@ def send_patient_email(data: dict, pdf_bytes: bytes, api_key: str) -> bool:
         return True
 
     except Exception as e:
-        print(f"Patient email error: {type(e).__name__}: {e}")
-        return False
+        raise RuntimeError(f"Patient email failed: {type(e).__name__}: {e}")
 
 
 def send_emails(data: dict, pdf_bytes: bytes, uploaded_files: dict = None, creds: dict = None) -> tuple:
@@ -255,8 +253,7 @@ def send_emails(data: dict, pdf_bytes: bytes, uploaded_files: dict = None, creds
         api_key = creds.get("resend_api_key", "")
 
     if not api_key:
-        print("EMAIL: RESEND_API_KEY not configured.")
-        return False, False
+        raise ValueError("RESEND_API_KEY not found in secrets. Add it to Streamlit Cloud secrets.")
 
     office_ok  = send_office_email(data, pdf_bytes, uploaded_files, api_key)
     patient_ok = send_patient_email(data, pdf_bytes, api_key)

@@ -686,8 +686,8 @@ def s10():
         prog.progress(100, text="Done!")
         st.session_state.email_office_ok  = ok_office
         st.session_state.email_patient_ok = ok_patient
+        st.session_state.email_error      = ""
     except Exception as e:
-        print(f"Email send exception: {type(e).__name__}: {e}")
         st.session_state.email_office_ok  = False
         st.session_state.email_patient_ok = False
         st.session_state.email_error      = str(e)
