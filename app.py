@@ -787,7 +787,7 @@ def s11():
 
     st.divider()
     st.markdown("#### How easy was that?")
-    st.markdown("Know someone who's been putting off their colonoscopy? Send them this link — it takes about 5 minutes.")
+    st.markdown("Know someone who's been putting off their colonoscopy? Send them this link.")
 
     friend_email_input = st.text_input(
         "Friend's email address:",
