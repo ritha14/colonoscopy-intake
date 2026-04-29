@@ -14,7 +14,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from config import OFFICE_PHONE, SURGERY_CENTERS, HOSPITAL_CENTERS, YOUTUBE_VIDEO_ID, BMI_CONDITION
 from utils.asa import ASA3_CONDITIONS
 from utils.pdf_generator import generate_referral_pdf
-from utils.email_sender import send_emails
+from utils.email_sender import send_emails, send_referral_email
 from utils.database import save_submission
 
 # ── Page setup ────────────────────────────────────────────────────────────────
@@ -784,6 +784,41 @@ def s11():
     <strong>Day after your colonoscopy:</strong><br>
     You are <strong>cleared to return to work, school, or normal activities.</strong> Most people feel completely back to normal by the next morning.
     """)
+
+    st.divider()
+    st.markdown("#### How easy was that?")
+    st.markdown("Know someone who's been putting off their colonoscopy? Send them this link — it takes about 5 minutes.")
+
+    friend_email_input = st.text_input(
+        "Friend's email address:",
+        placeholder="friend@email.com",
+        key="friend_email_input",
+        label_visibility="visible",
+    )
+    if st.button("Send to a Friend 📨", key="send_referral_btn", type="primary"):
+        if friend_email_input and "@" in friend_email_input:
+            try:
+                ref_creds = {
+                    "host":       str(st.secrets["SMTP_HOST"]),
+                    "user":       str(st.secrets["SMTP_USER"]),
+                    "password":   str(st.secrets["SMTP_PASSWORD"]).replace(" ", ""),
+                    "from_email": str(st.secrets["FROM_EMAIL"]),
+                }
+                send_referral_email(friend_email_input, d.get("first_name", "A friend"), ref_creds)
+                st.success(f"Sent! Your friend will get a message at {friend_email_input}.")
+            except Exception:
+                st.error("Couldn't send the email right now — copy the message below and text it instead.")
+        else:
+            st.warning("Enter a valid email address to send.")
+
+    st.markdown("<div style='margin-top:8px'></div>", unsafe_allow_html=True)
+    st.text_area(
+        "Or copy this and text it to a friend:",
+        value="I just scheduled my colonoscopy online in 5 minutes — no phone calls, no waiting on hold. If you've been putting yours off, here's the link: https://bit.ly/colonoscopy-intake",
+        height=100,
+        key="share_copy_msg",
+        label_visibility="visible",
+    )
 
     st.divider()
     st.markdown(f"**Questions?** Call or text **{OFFICE_PHONE}** or email **info@houstoncommunitysurgical.com**")

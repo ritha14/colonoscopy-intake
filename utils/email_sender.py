@@ -243,6 +243,54 @@ def send_patient_email(data: dict, pdf_bytes: bytes, creds: dict) -> bool:
     return True
 
 
+def send_referral_email(friend_email: str, sender_name: str, creds: dict) -> bool:
+    html = f"""
+<html><head>
+<style>
+  body {{ font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 16px;
+         color: #111; background: #f5f7fa; margin: 0; padding: 0; }}
+  .wrap {{ max-width: 580px; margin: 24px auto; background: #fff;
+           border-radius: 8px; overflow: hidden; border: 1px solid #dde3ea; }}
+  .header {{ background: #1a3a5c; padding: 24px 28px; text-align: center; }}
+  .header h1 {{ color: #fff; font-size: 20px; margin: 0 0 4px; }}
+  .header p  {{ color: #a8c4e0; font-size: 14px; margin: 0; }}
+  .body {{ padding: 28px; font-size: 16px; color: #333; line-height: 1.7; }}
+  .cta {{ display: block; text-align: center; background: #1a3a5c; color: #fff !important;
+          padding: 14px 28px; border-radius: 8px; text-decoration: none;
+          font-weight: 700; font-size: 17px; margin: 24px 0; }}
+  .footer {{ background: #f5f7fa; padding: 14px 28px;
+             font-size: 12px; color: #888; text-align: center; }}
+</style>
+</head><body>
+<div class="wrap">
+  <div class="header">
+    <h1>Houston Community Surgical</h1>
+    <p>Dr. Ritha Belizaire MD FACS FASCRS</p>
+  </div>
+  <div class="body">
+    <p>Hey,</p>
+    <p><strong>{sender_name}</strong> just completed their colonoscopy intake online and thought you might be due for one too.</p>
+    <p>It took less than 5 minutes — no phone calls, no waiting on hold. You fill out a short form, upload your insurance card, and the office takes it from there.</p>
+    <a href="https://bit.ly/colonoscopy-intake" class="cta">&#9654; Get Started — takes about 5 minutes</a>
+    <p style="font-size:14px; color:#555;">
+      Questions? Call or text <strong>(832) 979-5670</strong> or email
+      <strong>info@houstoncommunitysurgical.com</strong>
+    </p>
+  </div>
+  <div class="footer">Houston Community Surgical &nbsp;|&nbsp; Dr. Ritha Belizaire MD FACS FASCRS</div>
+</div>
+</body></html>"""
+
+    msg = MIMEMultipart("mixed")
+    msg["From"]    = f"Houston Community Surgical <{creds['from_email']}>"
+    msg["To"]      = friend_email
+    msg["Subject"] = f"{sender_name} thinks it's time for your colonoscopy \U0001f604"
+    msg.attach(MIMEText(html, "html"))
+    with _connect(creds) as server:
+        server.send_message(msg)
+    return True
+
+
 def send_emails(data: dict, pdf_bytes: bytes, uploaded_files: dict = None, creds: dict = None) -> tuple:
     if uploaded_files is None:
         uploaded_files = {}
