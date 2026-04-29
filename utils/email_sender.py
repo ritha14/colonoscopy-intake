@@ -1,29 +1,33 @@
 """
-Email sender using Resend API — works reliably from Streamlit Cloud.
+Email sender using Gmail SMTP via SSL (port 465).
+Credentials passed in from app.py where st.secrets is guaranteed available.
 """
+import smtplib
 import sys
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.application import MIMEApplication
 from pathlib import Path
 
-PREP_PDF_PATH = Path(__file__).parent.parent / "assets" / "miralax_prep.pdf"
+PREP_PDF_PATH    = Path(__file__).parent.parent / "assets" / "miralax_prep.pdf"
+YOUTUBE_VIDEO_ID = "Wml4B9fmDyE"
+OFFICE_PHONE     = "(832) 979-5670"
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from config import OFFICE_PHONE, OFFICE_EMAIL
-
-YOUTUBE_VIDEO_ID = "Wml4B9fmDyE"
-FROM_ADDRESS     = "Houston Community Surgical <info@houstoncommunitysurgical.com>"
-OFFICE_TO        = "info@houstoncommunitysurgical.com"
 
 
-def send_office_email(data: dict, pdf_bytes: bytes, uploaded_files: dict, api_key: str) -> bool:
-    try:
-        import resend
-        resend.api_key = api_key
+def _connect(creds: dict):
+    server = smtplib.SMTP_SSL(creds["host"], 465, timeout=30)
+    server.login(creds["user"], creds["password"])
+    return server
 
-        first  = data.get("first_name", "")
-        last   = data.get("last_name", "")
-        sub_id = data.get("submission_id", "N/A")
 
-        html = f"""
+def send_office_email(data: dict, pdf_bytes: bytes, uploaded_files: dict, creds: dict) -> bool:
+    first  = data.get("first_name", "")
+    last   = data.get("last_name", "")
+    sub_id = data.get("submission_id", "N/A")
+
+    html = f"""
 <html><head>
 <style>
   body {{ font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 16px;
@@ -72,66 +76,55 @@ def send_office_email(data: dict, pdf_bytes: bytes, uploaded_files: dict, api_ke
       <div class="row"><span class="lbl">Phone / Fax</span><span class="val">{data.get("pcp_phone","")} / {data.get("pcp_fax","")}</span></div>
     </div>
     <p style="font-size:14px; color:#555;">
-      Full referral PDF + insurance card + photo ID attached below.
+      Full referral PDF + insurance card + photo ID attached.
     </p>
   </div>
   <div class="footer">Submission ID: {sub_id} &nbsp;|&nbsp; Houston Community Surgical Intake System</div>
 </div>
 </body></html>"""
 
-        attachments = []
+    msg = MIMEMultipart("mixed")
+    msg["From"]    = f"HCS Intake <{creds['from_email']}>"
+    msg["To"]      = creds["office_email"]
+    msg["Subject"] = f"New Colonoscopy Intake — {first} {last}"
+    msg.attach(MIMEText(html, "html"))
 
-        # Referral PDF
-        attachments.append({
-            "filename": f"Referral_{last}_{first}_{sub_id}.pdf",
-            "content": list(pdf_bytes),
-        })
+    pdf_part = MIMEApplication(pdf_bytes, _subtype="pdf")
+    pdf_part.add_header("Content-Disposition", "attachment",
+                        filename=f"Referral_{last}_{first}_{sub_id}.pdf")
+    msg.attach(pdf_part)
 
-        # Uploaded ID files
-        file_map = {
-            "ins_front_bytes": ("ins_front_name", f"Insurance_Card_Front_{last}_{first}"),
-            "ins_back_bytes":  ("ins_back_name",  f"Insurance_Card_Back_{last}_{first}"),
-            "dl_bytes":        ("dl_name",         f"DriversLicense_{last}_{first}"),
-        }
-        for bytes_key, (name_key, fallback_name) in file_map.items():
-            file_data = uploaded_files.get(bytes_key)
-            if file_data:
-                orig_name = uploaded_files.get(name_key, "")
-                ext = Path(orig_name).suffix if orig_name else ".jpg"
-                attachments.append({
-                    "filename": f"{fallback_name}{ext}",
-                    "content": list(file_data),
-                })
+    file_map = {
+        "ins_front_bytes": ("ins_front_name", f"Insurance_Card_Front_{last}_{first}"),
+        "ins_back_bytes":  ("ins_back_name",  f"Insurance_Card_Back_{last}_{first}"),
+        "dl_bytes":        ("dl_name",         f"DriversLicense_{last}_{first}"),
+    }
+    for bytes_key, (name_key, fallback_name) in file_map.items():
+        file_data = uploaded_files.get(bytes_key)
+        if file_data:
+            orig_name = uploaded_files.get(name_key, "")
+            ext = Path(orig_name).suffix if orig_name else ".jpg"
+            attachment = MIMEApplication(file_data)
+            attachment.add_header("Content-Disposition", "attachment",
+                                  filename=f"{fallback_name}{ext}")
+            msg.attach(attachment)
 
-        resend.Emails.send({
-            "from":        FROM_ADDRESS,
-            "to":          [OFFICE_TO],
-            "reply_to":    "ritha.belizaire@houstoncommunitysurgical.com",
-            "subject":     f"New Colonoscopy Intake — {first} {last}",
-            "html":        html,
-            "attachments": attachments,
-        })
-        return True
-
-    except Exception as e:
-        raise RuntimeError(f"Office email failed: {type(e).__name__}: {e}")
+    with _connect(creds) as server:
+        server.send_message(msg)
+    return True
 
 
-def send_patient_email(data: dict, pdf_bytes: bytes, api_key: str) -> bool:
+def send_patient_email(data: dict, pdf_bytes: bytes, creds: dict) -> bool:
     patient_email = data.get("email", "")
     if not patient_email:
         return False
 
-    try:
-        import resend
-        resend.api_key = api_key
+    first    = data.get("first_name", "Patient")
+    last     = data.get("last_name", "")
+    sub_id   = data.get("submission_id", "N/A")
+    location = data.get("location_preference", "")
 
-        first    = data.get("first_name", "Patient")
-        last     = data.get("last_name", "")
-        sub_id   = data.get("submission_id", "N/A")
-        location = data.get("location_preference", "")
-
-        video_section = f"""
+    video_section = f"""
     <div class="section">
       <h2>PREP VIDEO</h2>
       <p>Please watch this short video so you know what to expect:</p>
@@ -141,7 +134,7 @@ def send_patient_email(data: dict, pdf_bytes: bytes, api_key: str) -> bool:
                    display:inline-block;">▶ Watch the Video</a></p>
     </div>"""
 
-        html = f"""
+    html = f"""
 <html><head>
 <style>
   body {{ font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 17px;
@@ -215,46 +208,33 @@ def send_patient_email(data: dict, pdf_bytes: bytes, api_key: str) -> bool:
 </div>
 </body></html>"""
 
-        attachments = []
+    msg = MIMEMultipart("mixed")
+    msg["From"]    = f"Houston Community Surgical <{creds['from_email']}>"
+    msg["To"]      = patient_email
+    msg["Subject"] = "Your Colonoscopy Intake — Houston Community Surgical"
+    msg.attach(MIMEText(html, "html"))
 
-        # Referral PDF
-        attachments.append({
-            "filename": f"Colonoscopy_Referral_{last}_{first}.pdf",
-            "content": list(pdf_bytes),
-        })
+    pdf_part = MIMEApplication(pdf_bytes, _subtype="pdf")
+    pdf_part.add_header("Content-Disposition", "attachment",
+                        filename=f"Colonoscopy_Referral_{last}_{first}.pdf")
+    msg.attach(pdf_part)
 
-        # Bowel prep PDF
-        if PREP_PDF_PATH.exists():
-            attachments.append({
-                "filename": "MiraLAX_Prep_Instructions.pdf",
-                "content": list(PREP_PDF_PATH.read_bytes()),
-            })
+    if PREP_PDF_PATH.exists():
+        prep_part = MIMEApplication(PREP_PDF_PATH.read_bytes(), _subtype="pdf")
+        prep_part.add_header("Content-Disposition", "attachment",
+                             filename="MiraLAX_Prep_Instructions.pdf")
+        msg.attach(prep_part)
 
-        resend.Emails.send({
-            "from":        FROM_ADDRESS,
-            "to":          [patient_email],
-            "reply_to":    "info@houstoncommunitysurgical.com",
-            "subject":     "Your Colonoscopy Intake — Houston Community Surgical",
-            "html":        html,
-            "attachments": attachments,
-        })
-        return True
-
-    except Exception as e:
-        raise RuntimeError(f"Patient email failed: {type(e).__name__}: {e}")
+    with _connect(creds) as server:
+        server.send_message(msg)
+    return True
 
 
 def send_emails(data: dict, pdf_bytes: bytes, uploaded_files: dict = None, creds: dict = None) -> tuple:
     if uploaded_files is None:
         uploaded_files = {}
-
-    api_key = ""
-    if creds:
-        api_key = creds.get("resend_api_key", "")
-
-    if not api_key:
-        raise ValueError("RESEND_API_KEY not found in secrets. Add it to Streamlit Cloud secrets.")
-
-    office_ok  = send_office_email(data, pdf_bytes, uploaded_files, api_key)
-    patient_ok = send_patient_email(data, pdf_bytes, api_key)
+    if not creds or not creds.get("user") or not creds.get("password"):
+        raise ValueError("SMTP credentials missing from secrets.")
+    office_ok  = send_office_email(data, pdf_bytes, uploaded_files, creds)
+    patient_ok = send_patient_email(data, pdf_bytes, creds)
     return office_ok, patient_ok

@@ -676,10 +676,15 @@ def s10():
     except Exception: pass
 
     try:
-        creds = {"resend_api_key": str(st.secrets["RESEND_API_KEY"])}
+        creds = {
+            "host":         str(st.secrets["SMTP_HOST"]),
+            "user":         str(st.secrets["SMTP_USER"]),
+            "password":     str(st.secrets["SMTP_PASSWORD"]).replace(" ", ""),
+            "from_email":   str(st.secrets["FROM_EMAIL"]),
+            "office_email": str(st.secrets["OFFICE_EMAIL"]),
+        }
     except Exception as e:
-        print(f"Secrets read error: {type(e).__name__}: {e}")
-        creds = None
+        raise ValueError(f"Could not load SMTP credentials from secrets: {e}")
 
     try:
         ok_office, ok_patient = send_emails(d, pdf, st.session_state.uf, creds=creds)
