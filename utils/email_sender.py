@@ -1,58 +1,27 @@
 """
-Email sender — sends referral PDF and any uploaded files to the office,
-and sends a styled HTML confirmation email to the patient.
+Email sender using Resend API — works reliably from Streamlit Cloud.
 """
-import smtplib
 import sys
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-from email.mime.application import MIMEApplication
-from email.mime.image import MIMEImage
 from pathlib import Path
 
 PREP_PDF_PATH = Path(__file__).parent.parent / "assets" / "miralax_prep.pdf"
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from config import SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, FROM_EMAIL, OFFICE_EMAIL, OFFICE_PHONE, YOUTUBE_VIDEO_ID
+from config import OFFICE_PHONE, OFFICE_EMAIL
+
+YOUTUBE_VIDEO_ID = "Wml4B9fmDyE"
+FROM_ADDRESS     = "Houston Community Surgical <onboarding@resend.dev>"
+OFFICE_TO        = "info@houstoncommunitysurgical.com"
 
 
-def _secrets():
-    """Fallback credentials from module-level config (works locally via .env)."""
-    import os
-    return {
-        "host":     os.getenv("SMTP_HOST",     SMTP_HOST or "smtp.gmail.com"),
-        "port":     int(os.getenv("SMTP_PORT", str(SMTP_PORT or 587))),
-        "user":     os.getenv("SMTP_USER",     SMTP_USER or ""),
-        "password": os.getenv("SMTP_PASSWORD", SMTP_PASSWORD or "").replace(" ", ""),
-        "from":     os.getenv("FROM_EMAIL",    FROM_EMAIL or ""),
-        "office":   os.getenv("OFFICE_EMAIL",  OFFICE_EMAIL or "info@houstoncommunitysurgical.com"),
-        "youtube":  os.getenv("YOUTUBE_VIDEO_ID", YOUTUBE_VIDEO_ID or "Wml4B9fmDyE"),
-    }
-
-
-def _connect(creds):
-    server = smtplib.SMTP(creds["host"], creds["port"], timeout=20)
-    server.starttls()
-    server.login(creds["user"], creds["password"])
-    return server
-
-
-def send_office_email(data: dict, pdf_bytes: bytes, uploaded_files: dict, creds: dict = None) -> bool:
-    if creds is None:
-        creds = _secrets()
-    if not creds["user"] or not creds["password"]:
-        print("EMAIL: SMTP not configured — skipping office email.")
-        return False
-
+def send_office_email(data: dict, pdf_bytes: bytes, uploaded_files: dict, api_key: str) -> bool:
     try:
-        first = data.get("first_name", "")
-        last  = data.get("last_name", "")
-        sub_id = data.get("submission_id", "N/A")
+        import resend
+        resend.api_key = api_key
 
-        msg = MIMEMultipart("alternative")
-        msg["From"]    = f"HCS Intake <{creds['from']}>"
-        msg["To"]      = creds["office"]
-        msg["Subject"] = f"New Colonoscopy Intake — {first} {last}"
+        first  = data.get("first_name", "")
+        last   = data.get("last_name", "")
+        sub_id = data.get("submission_id", "N/A")
 
         html = f"""
 <html><head>
@@ -60,8 +29,7 @@ def send_office_email(data: dict, pdf_bytes: bytes, uploaded_files: dict, creds:
   body {{ font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 16px;
          color: #111; background: #f5f7fa; margin: 0; padding: 0; }}
   .wrap {{ max-width: 620px; margin: 24px auto; background: #fff;
-           border-radius: 8px; overflow: hidden;
-           border: 1px solid #dde3ea; }}
+           border-radius: 8px; overflow: hidden; border: 1px solid #dde3ea; }}
   .header {{ background: #1a3a5c; padding: 20px 28px; }}
   .header h1 {{ color: #fff; font-size: 20px; margin: 0; }}
   .header p  {{ color: #a8c4e0; font-size: 14px; margin: 4px 0 0; }}
@@ -104,22 +72,22 @@ def send_office_email(data: dict, pdf_bytes: bytes, uploaded_files: dict, creds:
       <div class="row"><span class="lbl">Phone / Fax</span><span class="val">{data.get("pcp_phone","")} / {data.get("pcp_fax","")}</span></div>
     </div>
     <p style="font-size:14px; color:#555;">
-      Full referral form attached as PDF. Insurance card and photo ID attached below.
+      Full referral PDF + insurance card + photo ID attached below.
     </p>
   </div>
   <div class="footer">Submission ID: {sub_id} &nbsp;|&nbsp; Houston Community Surgical Intake System</div>
 </div>
 </body></html>"""
 
-        msg.attach(MIMEText(html, "html"))
+        attachments = []
 
-        # Attach referral PDF
-        pdf_part = MIMEApplication(pdf_bytes, _subtype="pdf")
-        pdf_part.add_header("Content-Disposition", "attachment",
-                            filename=f"Referral_{last}_{first}_{sub_id}.pdf")
-        msg.attach(pdf_part)
+        # Referral PDF
+        attachments.append({
+            "filename": f"Referral_{last}_{first}_{sub_id}.pdf",
+            "content": list(pdf_bytes),
+        })
 
-        # Attach uploaded ID files
+        # Uploaded ID files
         file_map = {
             "ins_front_bytes": ("ins_front_name", f"Insurance_Card_Front_{last}_{first}"),
             "ins_back_bytes":  ("ins_back_name",  f"Insurance_Card_Back_{last}_{first}"),
@@ -130,13 +98,19 @@ def send_office_email(data: dict, pdf_bytes: bytes, uploaded_files: dict, creds:
             if file_data:
                 orig_name = uploaded_files.get(name_key, "")
                 ext = Path(orig_name).suffix if orig_name else ".jpg"
-                attachment = MIMEApplication(file_data)
-                attachment.add_header("Content-Disposition", "attachment",
-                                      filename=f"{fallback_name}{ext}")
-                msg.attach(attachment)
+                attachments.append({
+                    "filename": f"{fallback_name}{ext}",
+                    "content": list(file_data),
+                })
 
-        with _connect(creds) as server:
-            server.send_message(msg)
+        resend.Emails.send({
+            "from":        FROM_ADDRESS,
+            "to":          [OFFICE_TO],
+            "reply_to":    "ritha.belizaire@houstoncommunitysurgical.com",
+            "subject":     f"New Colonoscopy Intake — {first} {last}",
+            "html":        html,
+            "attachments": attachments,
+        })
         return True
 
     except Exception as e:
@@ -144,31 +118,25 @@ def send_office_email(data: dict, pdf_bytes: bytes, uploaded_files: dict, creds:
         return False
 
 
-def send_patient_email(data: dict, pdf_bytes: bytes, creds: dict = None) -> bool:
-    if creds is None:
-        creds = _secrets()
-    if not creds["user"] or not creds["password"]:
-        print("EMAIL: SMTP not configured — skipping patient email.")
-        return False
-
+def send_patient_email(data: dict, pdf_bytes: bytes, api_key: str) -> bool:
     patient_email = data.get("email", "")
     if not patient_email:
         return False
 
     try:
-        first  = data.get("first_name", "Patient")
-        last   = data.get("last_name", "")
-        sub_id = data.get("submission_id", "N/A")
+        import resend
+        resend.api_key = api_key
+
+        first    = data.get("first_name", "Patient")
+        last     = data.get("last_name", "")
+        sub_id   = data.get("submission_id", "N/A")
         location = data.get("location_preference", "")
 
-        vid_id = creds["youtube"]
-        video_section = ""
-        if vid_id and vid_id.strip():
-            video_section = f"""
+        video_section = f"""
     <div class="section">
-      <h2>COLONOSCOPY INSTRUCTION VIDEO</h2>
-      <p>Please watch this short video so you know exactly what to expect on the day of your procedure:</p>
-      <p><a href="https://www.youtube.com/watch?v={vid_id.strip()}"
+      <h2>PREP VIDEO</h2>
+      <p>Please watch this short video so you know what to expect:</p>
+      <p><a href="https://www.youtube.com/watch?v={YOUTUBE_VIDEO_ID}"
             style="background:#1a3a5c; color:#fff; padding:10px 20px;
                    border-radius:6px; text-decoration:none; font-weight:700;
                    display:inline-block;">▶ Watch the Video</a></p>
@@ -180,12 +148,11 @@ def send_patient_email(data: dict, pdf_bytes: bytes, creds: dict = None) -> bool
   body {{ font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 17px;
          color: #111; background: #f5f7fa; margin: 0; padding: 0; }}
   .wrap {{ max-width: 620px; margin: 24px auto; background: #fff;
-           border-radius: 8px; overflow: hidden;
-           border: 1px solid #dde3ea; }}
+           border-radius: 8px; overflow: hidden; border: 1px solid #dde3ea; }}
   .header {{ background: #1a3a5c; padding: 24px 28px; text-align: center; }}
   .header h1 {{ color: #fff; font-size: 22px; margin: 0 0 4px; }}
   .header p  {{ color: #a8c4e0; font-size: 15px; margin: 0; }}
-  .body {{ padding: 28px 28px; }}
+  .body {{ padding: 28px; }}
   .greeting {{ font-size: 19px; font-weight: 600; color: #1a3a5c; margin-bottom: 12px; }}
   .intro {{ font-size: 16px; color: #333; line-height: 1.7; margin-bottom: 24px; }}
   .section {{ margin-bottom: 24px; }}
@@ -193,14 +160,12 @@ def send_patient_email(data: dict, pdf_bytes: bytes, creds: dict = None) -> bool
                  background: #1a3a5c; padding: 7px 12px;
                  border-radius: 4px; margin: 0 0 12px; letter-spacing:.5px; }}
   .section p  {{ font-size: 16px; color: #333; line-height: 1.7; margin: 6px 0; }}
-  .section ul {{ font-size: 16px; color: #333; line-height: 1.9;
-                 padding-left: 20px; margin: 0; }}
+  .section ul {{ font-size: 16px; color: #333; line-height: 1.9; padding-left: 20px; margin: 0; }}
   .highlight {{ background: #e8f4fd; border-left: 4px solid #2c5f8a;
                 padding: 14px 18px; border-radius: 4px;
                 font-size: 16px; color: #1a3a5c; margin: 16px 0; }}
-  .footer {{ background: #f5f7fa; padding: 18px 28px;
-             font-size: 13px; color: #888; text-align: center;
-             border-top: 1px solid #dde3ea; line-height: 1.8; }}
+  .footer {{ background: #f5f7fa; padding: 18px 28px; font-size: 13px;
+             color: #888; text-align: center; border-top: 1px solid #dde3ea; line-height: 1.8; }}
 </style>
 </head><body>
 <div class="wrap">
@@ -211,22 +176,18 @@ def send_patient_email(data: dict, pdf_bytes: bytes, creds: dict = None) -> bool
   <div class="body">
     <div class="greeting">Hi {first},</div>
     <div class="intro">
-      Thank you for completing your colonoscopy intake. We have received everything
-      and Tamika or Kaye will be in touch within <strong>1–2 business days</strong> to schedule your procedure.
+      Thank you for completing your colonoscopy intake. We have received everything and
+      Tamika or Kaye will be in touch within <strong>1–2 business days</strong> to schedule your procedure.
     </div>
-
     <div class="section">
       <h2>YOUR PREFERRED LOCATION</h2>
       <p>{location}</p>
     </div>
-
     <div class="section">
       <h2>INSURANCE</h2>
-      <p>{data.get("insurance_message","Our office will verify your coverage before scheduling.")}</p>
+      <p>{data.get("insurance_message", "Our office will verify your coverage before scheduling.")}</p>
     </div>
-
     {video_section}
-
     <div class="section">
       <h2>BOWEL PREP INSTRUCTIONS</h2>
       <ul>
@@ -235,18 +196,15 @@ def send_patient_email(data: dict, pdf_bytes: bytes, creds: dict = None) -> bool
         <li>Do <strong>not</strong> eat solid food after midnight the night before your procedure.</li>
       </ul>
     </div>
-
     <div class="section">
       <h2>NEXT STEPS</h2>
       <ul>
         <li>Your referral summary is attached — please save it for your records.</li>
-        <li>If you have any questions, call or text us at <strong>{OFFICE_PHONE}</strong>
-            or reply to this email.</li>
+        <li>Questions? Call or text <strong>{OFFICE_PHONE}</strong> or reply to this email.</li>
       </ul>
     </div>
-
     <div class="highlight">
-      Questions? Call or text <strong>{OFFICE_PHONE}</strong> or email
+      Call or text <strong>{OFFICE_PHONE}</strong> &nbsp;|&nbsp;
       <strong>info@houstoncommunitysurgical.com</strong>
     </div>
   </div>
@@ -258,28 +216,29 @@ def send_patient_email(data: dict, pdf_bytes: bytes, creds: dict = None) -> bool
 </div>
 </body></html>"""
 
-        msg = MIMEMultipart("mixed")
-        msg["From"]    = f"Houston Community Surgical <{creds['from']}>"
-        msg["To"]      = patient_email
-        msg["Subject"] = "Your Colonoscopy Intake — Houston Community Surgical"
+        attachments = []
 
-        msg.attach(MIMEText(html, "html"))
+        # Referral PDF
+        attachments.append({
+            "filename": f"Colonoscopy_Referral_{last}_{first}.pdf",
+            "content": list(pdf_bytes),
+        })
 
-        # Attach referral PDF
-        pdf_part = MIMEApplication(pdf_bytes, _subtype="pdf")
-        pdf_part.add_header("Content-Disposition", "attachment",
-                            filename=f"Colonoscopy_Referral_{last}_{first}.pdf")
-        msg.attach(pdf_part)
-
-        # Attach bowel prep PDF if available
+        # Bowel prep PDF
         if PREP_PDF_PATH.exists():
-            prep_part = MIMEApplication(PREP_PDF_PATH.read_bytes(), _subtype="pdf")
-            prep_part.add_header("Content-Disposition", "attachment",
-                                 filename="MiraLAX_Prep_Instructions.pdf")
-            msg.attach(prep_part)
+            attachments.append({
+                "filename": "MiraLAX_Prep_Instructions.pdf",
+                "content": list(PREP_PDF_PATH.read_bytes()),
+            })
 
-        with _connect(creds) as server:
-            server.send_message(msg)
+        resend.Emails.send({
+            "from":        FROM_ADDRESS,
+            "to":          [patient_email],
+            "reply_to":    "info@houstoncommunitysurgical.com",
+            "subject":     "Your Colonoscopy Intake — Houston Community Surgical",
+            "html":        html,
+            "attachments": attachments,
+        })
         return True
 
     except Exception as e:
@@ -290,8 +249,15 @@ def send_patient_email(data: dict, pdf_bytes: bytes, creds: dict = None) -> bool
 def send_emails(data: dict, pdf_bytes: bytes, uploaded_files: dict = None, creds: dict = None) -> tuple:
     if uploaded_files is None:
         uploaded_files = {}
-    if creds is None:
-        creds = _secrets()
-    office_ok  = send_office_email(data, pdf_bytes, uploaded_files, creds)
-    patient_ok = send_patient_email(data, pdf_bytes, creds)
+
+    api_key = ""
+    if creds:
+        api_key = creds.get("resend_api_key", "")
+
+    if not api_key:
+        print("EMAIL: RESEND_API_KEY not configured.")
+        return False, False
+
+    office_ok  = send_office_email(data, pdf_bytes, uploaded_files, api_key)
+    patient_ok = send_patient_email(data, pdf_bytes, api_key)
     return office_ok, patient_ok

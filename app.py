@@ -675,20 +675,11 @@ def s10():
         prog.progress(65, text="Sending confirmation emails…")
     except Exception: pass
 
-    # Read credentials directly from st.secrets here — guaranteed to work in app context
     try:
-        creds = {
-            "host":     str(st.secrets["SMTP_HOST"]),
-            "port":     int(st.secrets["SMTP_PORT"]),
-            "user":     str(st.secrets["SMTP_USER"]),
-            "password": str(st.secrets["SMTP_PASSWORD"]).replace(" ", ""),
-            "from":     str(st.secrets["FROM_EMAIL"]),
-            "office":   str(st.secrets["OFFICE_EMAIL"]),
-            "youtube":  str(st.secrets.get("YOUTUBE_VIDEO_ID", "Wml4B9fmDyE")),
-        }
+        creds = {"resend_api_key": str(st.secrets["RESEND_API_KEY"])}
     except Exception as e:
         print(f"Secrets read error: {type(e).__name__}: {e}")
-        creds = None  # email_sender will fall back to .env (works locally)
+        creds = None
 
     try:
         ok_office, ok_patient = send_emails(d, pdf, st.session_state.uf, creds=creds)
