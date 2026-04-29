@@ -11,7 +11,7 @@ from config import OFFICE_PHONE, OFFICE_EMAIL
 
 YOUTUBE_VIDEO_ID = "Wml4B9fmDyE"
 FROM_ADDRESS     = "Houston Community Surgical <onboarding@resend.dev>"
-OFFICE_TO        = "info@houstoncommunitysurgical.com"
+OFFICE_TO        = "belizaire@gmail.com"  # temporary until domain verified in Resend
 
 
 def send_office_email(data: dict, pdf_bytes: bytes, uploaded_files: dict, api_key: str) -> bool:
