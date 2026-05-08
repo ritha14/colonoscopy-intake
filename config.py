@@ -33,8 +33,13 @@ ANTHROPIC_API_KEY = _get("ANTHROPIC_API_KEY", "")
 # YouTube
 YOUTUBE_VIDEO_ID = _get("YOUTUBE_VIDEO_ID", "")
 
-# Database
-DB_PATH = _get("DB_PATH", "data/submissions.db")
+# Database (PostgreSQL / Cloud SQL)
+DB_USER = _get("DB_USER", "postgres")
+DB_PASSWORD = _get("DB_PASSWORD", "")
+DB_NAME = _get("DB_NAME", "colonoscopy")
+INSTANCE_CONNECTION_NAME = _get("INSTANCE_CONNECTION_NAME", "")
+DB_HOST = _get("DB_HOST", "localhost")
+DB_PORT = _get("DB_PORT", "5432")
 
 # Office constants
 OFFICE_PHONE = "(832) 979-5670"
